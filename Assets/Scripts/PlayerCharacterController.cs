@@ -49,7 +49,7 @@ public class PlayerCharacterController : MonoBehaviour
     [Tooltip("Force applied upward when jumping")]
     public float jumpForce = 9f;
     public int m_maxJumpCount = 2;
-    private int m_remainingJumpCount;
+    internal int m_remainingJumpCount;
 
     [Header("Stance")]
     [Tooltip("Ratio (0-1) of the character height where the camera will be at")]
@@ -201,7 +201,7 @@ public class PlayerCharacterController : MonoBehaviour
             if (recievesFallDamage && fallSpeedRatio > 0f)
             {
                 float dmgFromFall = Mathf.Lerp(fallDamageAtMinSpeed, fallDamageAtMaxSpeed, fallSpeedRatio);
-                m_Health.TakeDamage(dmgFromFall, null);
+                // m_Health.TakeDamage(dmgFromFall, null);
 
                 // fall damage SFX
                 // audioSource.PlayOneShot(fallDamageSFX);
@@ -407,7 +407,6 @@ public class PlayerCharacterController : MonoBehaviour
                 m_LastTimeJumped = Time.time;
                 hasJumpedThisFrame = true;
                 m_remainingJumpCount--;
-                // print(m_remainingJumpCount);
 
                 // Force grounding to false
                 isGrounded = false;

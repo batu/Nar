@@ -6,6 +6,7 @@ using UnityEngine.Rendering;
 public class WallRun : MonoBehaviour
 {
 
+    public bool canWallRun = true;
     public float wallMaxDistance = 1;
     public float wallSpeedMultiplier = 1.2f;
     public float minimumHeight = 1.2f;
@@ -47,6 +48,9 @@ public class WallRun : MonoBehaviour
 
     bool CanWallRun()
     {
+        if (!canWallRun)
+            return false;
+        
         float verticalAxis = Input.GetAxisRaw(GameConstants.k_AxisNameVertical);
         bool isSprinting = m_InputHandler.GetSprintInputHeld();
         isSprinting = !useSprint ? true : isSprinting;

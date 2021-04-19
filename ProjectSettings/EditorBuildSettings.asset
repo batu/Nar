@@ -14,7 +14,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/ML_Envs/Pipeline.unity
     guid: 1f755825614f6ac4ead14e46e2dade14
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ML_Envs/PipelineInference.unity
     guid: 94479ba2365abe84399fa96c03a3cef3
+  - enabled: 1
+    path: Assets/Scenes/ML_Envs/jump.unity
+    guid: 8d69e5aab367ee04da8fc0716459598d
   m_configObjects: {}
