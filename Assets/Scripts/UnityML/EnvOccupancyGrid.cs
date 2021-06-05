@@ -10,31 +10,52 @@ public class EnvOccupancyGrid : ScriptableObject
 
     [HideInInspector]
     public Transform env;
-    [HideInInspector]
-    public Dictionary<Vector3, bool> occupancy;
+    public Dictionary<Vector3Int, bool> Occupancy;
+
 
     private EpisodeHandler _episodeHandler;
+    public float visualizeDistance = 50f;
     public int boxSize = 2;
     public int offset = 3;
 
+    private float edgeGuard =0.01f;
+    private int _xHalfBoxCount;
+    private int _yHalfBoxCount;
+    private int _zHalfBoxCount;
+    const float PlayerHeightAdjustment = 0.9f;
 
     public void CreateOccupancyDict()
     {
-        occupancy = new Dictionary<Vector3, bool>();
+
+        Debug.Log("Created new occupancy dict."); 
+        Occupancy = new Dictionary<Vector3Int, bool>();
         _episodeHandler = env.GetComponent<EpisodeHandler>();
 
+        if (_episodeHandler == null)
+        {
+            Debug.LogError("The EnvOccupancyGrid couldn't find the _episodeHandler. This might be caused by the env not being set correctly." +
+                           "The env is set in the OccupancyGridObservation.cs using transform.parent, meaning the parent of the PlayerAgent class needs " +
+                           $"to be the Env (or the gameobject with _episodeHandler component) and currently it is {env.name}");
+        }
+        
         _episodeHandler.Agent.GetComponent<Collider>().enabled = false;
         _episodeHandler.Goal.GetComponent<Collider>().enabled = false;
-        for (float x = -_episodeHandler.xLen/2f - offset; x <= _episodeHandler.xLen/2f + offset; x += boxSize)
+
+        _xHalfBoxCount = Mathf.CeilToInt((_episodeHandler.xLen + offset) / 2f) + 1;
+        _yHalfBoxCount = Mathf.CeilToInt((100 + offset) / 2f) + 1;
+        _zHalfBoxCount = Mathf.CeilToInt((_episodeHandler.zLen + offset) / 2f) + 1;
+        for (int xIndex = -_xHalfBoxCount; xIndex <= _xHalfBoxCount; xIndex++)
         {
-            for (float y = - offset + boxSize/2f; y <= 30f + offset; y += boxSize)
+            for (int yIndex = -_yHalfBoxCount; yIndex <= _yHalfBoxCount; yIndex++)
             {
-                for (float z = -_episodeHandler.zLen / 2f - offset; z <= _episodeHandler.zLen / 2f + offset; z += boxSize)
+                for (int zIndex = -_zHalfBoxCount; zIndex <= _zHalfBoxCount; zIndex++)
                 {
-                    Vector3 center = new Vector3(x, y, z);
-                    Vector3 halfExtents = new Vector3(boxSize / 2f, boxSize / 2f, boxSize / 2f);
-                    bool overlap = Physics.OverlapBox(center + halfExtents, halfExtents, Quaternion.identity).Length > 0;
-                    occupancy[center + halfExtents] = overlap;
+                    
+                    Vector3 center = new Vector3(xIndex * boxSize, yIndex * boxSize, zIndex * boxSize);
+                    Vector3 halfExtents = new Vector3(boxSize / 2f - edgeGuard, boxSize / 2f - edgeGuard, boxSize / 2f- edgeGuard);
+                    bool overlap = Physics.OverlapBox(center, halfExtents, Quaternion.identity).Length > 0;
+                    Vector3Int index = new Vector3Int(xIndex, yIndex, zIndex);
+                    Occupancy[index] = overlap;
                 }
             }
         }
@@ -44,84 +65,90 @@ public class EnvOccupancyGrid : ScriptableObject
     }
 
     public void VisualizeOccupancy()
-    {
-        for (float x = -_episodeHandler.xLen/2f - offset; x <= _episodeHandler.xLen/2f + offset; x += boxSize)
+    { 
+        if (Occupancy == null)
         {
-            for (float y = - offset + boxSize/2f; y <= 30f + offset; y += boxSize)
-            {
-                for (float z = -_episodeHandler.zLen / 2f - offset; z <= _episodeHandler.zLen / 2f + offset; z += boxSize)
-                {
-                    Vector3 extents = new Vector3(boxSize, boxSize, boxSize);
-                    Vector3 center = new Vector3(x, y, z) + extents/2f;
-                    bool overlap = occupancy[center];
-
-                    Gizmos.color = overlap ? Color.red : Color.white;
-                    if (overlap) Gizmos.DrawWireCube(center, extents);
-                }
-            }
-        }   
-    }
-    
-    public void VisualizePlayerOccupancy(Vector3 playerPosition, int xCount, int yCount, int zCount)
-    {
+            Debug.LogWarning("Can't visualize the occupancy because the occupancy dictionary is not created. " +
+                             "Please play the scene and ensure CreateOccupancyDict is called to regenerate a " +
+                             "occupancy grid scriptable object. ");
+            return;
+        }
         Vector3 extents = new Vector3(boxSize, boxSize, boxSize);
-        for (float x = -xCount * boxSize; x <= xCount * boxSize; x += boxSize)
-        {
-            for (float y = -yCount * boxSize; y <= yCount * boxSize; y += boxSize)
+        foreach (var keyvalue in Occupancy)
+        {        
+            Vector3 center = keyvalue.Key * boxSize;
+            bool overlap = keyvalue.Value;
+            if (overlap && Vector3.Distance(Camera.current.transform.position, center) < visualizeDistance && InfiniteCameraCanSeePoint(Camera.current, center))
             {
-                for (float z = -zCount * boxSize; z <= zCount * boxSize; z += boxSize)
-                {
-                    float xPosFloat = (x + playerPosition.x) / boxSize;
-                    float yPosFloat = (y + playerPosition.y) / boxSize;
-                    float zPosFloat = (z + playerPosition.z) / boxSize;
-
-                    xPosFloat += xPosFloat <= 0 ? -1 : 0;
-                    yPosFloat += yPosFloat <= 0 ? -1 : 0;
-                    zPosFloat += zPosFloat <= 0 ? -1 : 0;
-
-                    int xPos = (int) xPosFloat;
-                    int yPos = (int) yPosFloat;
-                    int zPos = (int) zPosFloat;
-
-                    Vector3 key = new Vector3(xPos, yPos, zPos) * boxSize + extents/2f + new Vector3(0, boxSize/2f, 0);
-                    
-                    bool overlap = occupancy[key];
-                    Gizmos.color = overlap ? Color.magenta : Color.green;
-                    Gizmos.DrawWireCube(key, extents);
-                }
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireCube(center, extents);    
             }
         }
     }
 
+    
+    public void VisualizePlayerOccupancy(Vector3 playerPosition, int xCount, int yCount, int zCount)
+    {
+        if (Occupancy == null)
+        {
+            Debug.LogWarning("Can't visualize the occupancy because the occupancy dictionary is not created. " +
+                             "Please play the scene and ensure CreateOccupancyDict is called to regenerate a " +
+                             "occupancy grid scriptable object. ");
+            return;
+        }
+        Vector3 extents = new Vector3(boxSize, boxSize, boxSize);
+        for (int xIndex = -xCount; xIndex <= xCount; xIndex++)
+        {
+            for (int yIndex = -yCount; yIndex <= yCount; yIndex++)
+            {
+                for (int zIndex = -zCount; zIndex <= zCount; zIndex++)
+                {
+                    Vector3Int playerCurrentIndex = GetPlayerCurrentIndex(playerPosition);
+                    Vector3Int key = playerCurrentIndex + new Vector3Int(xIndex, yIndex, zIndex);
+                    bool overlap = Occupancy[key];
+                    Gizmos.color = overlap ? Color.magenta : Color.green;
+                    Gizmos.DrawWireCube(key * boxSize, extents);
+                }
+            }
+        }
+    }
     public float[] GetPlayerArea(Vector3 playerPosition, int xCount, int yCount, int zCount)
     {
-        Vector3 halfExtents = new Vector3(boxSize / 2f, boxSize / 2f, boxSize / 2f);
         List<float> occupancyObservation = new List<float>();
-        for (float x = -xCount * boxSize; x <= xCount * boxSize; x += boxSize)
+        for (int xIndex = -xCount; xIndex <= xCount; xIndex++)
         {
-            for (float y = -yCount * boxSize; y <= yCount * boxSize; y += boxSize)
+            for (int yIndex = -yCount; yIndex <= yCount; yIndex++)
             {
-                for (float z = -zCount * boxSize; z <= zCount * boxSize; z += boxSize)
+                for (int zIndex = -zCount; zIndex <= zCount; zIndex++)
                 {
-                    float xPosFloat = (x + playerPosition.x) / boxSize;
-                    float yPosFloat = (y + playerPosition.y) / boxSize;
-                    float zPosFloat = (z + playerPosition.z) / boxSize;
+                    Vector3Int playerCurrentIndex = GetPlayerCurrentIndex(playerPosition);
+                    Vector3Int key = playerCurrentIndex + new Vector3Int(xIndex, yIndex, zIndex);
 
-                    xPosFloat += xPosFloat <= 0 ? -1 : 0;
-                    yPosFloat += yPosFloat <= 0 ? -1 : 0;
-                    zPosFloat += zPosFloat <= 0 ? -1 : 0;
-
-                    int xPos = (int) xPosFloat;
-                    int yPos = (int) yPosFloat;
-                    int zPos = (int) zPosFloat;
-                    Vector3 key = new Vector3(xPos, yPos, zPos) * boxSize + halfExtents + new Vector3(0, boxSize/2f, 0);
-                    float value = occupancy[key] ? 1 : 0;
+                    Occupancy.TryGetValue(key, out bool isOccupied);
+                    float value = isOccupied ? 1 : 0;
                     occupancyObservation.Add(value);
                 }
             }
         }
-
         return occupancyObservation.ToArray();
     }
-    
+
+    private Vector3Int GetPlayerCurrentIndex(Vector3 position)
+    {
+        Vector3 halfExtents = new Vector3(boxSize / 2f, boxSize / 2f, boxSize / 2f);
+        int xIndex = (int) ((position.x + halfExtents.x) / boxSize); 
+        int yIndex = (int) ((position.y + PlayerHeightAdjustment + halfExtents.y) / boxSize); 
+        int zIndex = (int) ((position.z + halfExtents.z) / boxSize);
+
+        xIndex = xIndex < 0 ? xIndex - 1 : xIndex;
+        yIndex = yIndex < 0 ? yIndex - 1 : yIndex;
+        zIndex = zIndex < 0 ? zIndex - 1 : zIndex;
+
+        return new Vector3Int(xIndex, yIndex, zIndex);
+    } 
+
+    bool InfiniteCameraCanSeePoint (Camera camera, Vector3 point) {
+        Vector3 viewportPoint = camera.WorldToViewportPoint(point);
+        return (viewportPoint.z > 0 && (new Rect(0, 0, 1, 1)).Contains(viewportPoint));
+    }
 }
