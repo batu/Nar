@@ -5,25 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/ML_Envs/jump.unity
-    guid: 8d69e5aab367ee04da8fc0716459598d
   - enabled: 1
-    path: Assets/Scenes/TargetLearning.unity
-    guid: 640b505a028e77e47b1a4426c17dcf1e
-  - enabled: 0
-    path: Assets/Scenes/TargetLearning_Building.unity
-    guid: c6551f58036acc147a3447d6ba91c691
-  - enabled: 0
-    path: Assets/Scenes/TargetLearning_East.unity
-    guid: ed100d2f8e4cc274084df8594d6b594f
-  - enabled: 0
-    path: Assets/Scenes/JumpAssistance.unity
-    guid: 31f3c010f79c120429ec9df81f85e211
-  - enabled: 0
-    path: Assets/Scenes/Debug.unity
-    guid: 478061c1abbec3e439138a5daa04ddbb
-  - enabled: 0
-    path: Assets/Scenes/TargetLearning_5Buildings.unity
-    guid: 9ead629527c01a24a9f487c76348e614
+    path: Assets/_Scenes/1_Jump/JumpEnv.unity
+    guid: 8d69e5aab367ee04da8fc0716459598d
   m_configObjects: {}
