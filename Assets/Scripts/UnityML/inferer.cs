@@ -1,63 +1,95 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Unity.Barracuda;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class inferer : MonoBehaviour, InputHandler
+public class Inferer : MonoBehaviour, InputHandler
 {
-    
-    public GameObject goal;
-    public NNModel modelAsset;
-    public float maxDistance = 100 * 1.41f;
-    public float mult = 1f;
 
+    public int decisionFrequency = 5;
+    public NNModel modelAsset;
+
+    private NavigationAgent _navigationAgent;
+    private Model _runtimeModel;
+    private IWorker _worker;
     
-    private Model m_RuntimeModel;
-    private IWorker worker;
+    private VectorObservation _vectorObservation;
+    private DepthMaskObservation _depthMaskObservation;
+    private OccupancyGridObservation _occupancyGridObservation;
+    private LocalRaycastObservation _localRaycastObservation;
+
+    private int _inputShape;
 
     void Start()
-    {   
-        m_RuntimeModel = ModelLoader.Load(modelAsset);
-        print(m_RuntimeModel.outputs[0]);
-        print(m_RuntimeModel.outputs[1]);
-        worker = WorkerFactory.CreateWorker(WorkerFactory.Type.CSharpRef, m_RuntimeModel);
+    {
+        Debug.LogWarning("The Quaternion turn adjustment is active!");
+        _navigationAgent = GetComponent<NavigationAgent>();
+        
+        _vectorObservation = GetComponent<VectorObservation>();
+        _depthMaskObservation = GetComponent<DepthMaskObservation>();
+        _localRaycastObservation = GetComponent<LocalRaycastObservation>();
+        _occupancyGridObservation = GetComponent<OccupancyGridObservation>();
+        
+        
+        _runtimeModel = ModelLoader.Load(modelAsset);
+        _inputShape = _runtimeModel.inputs[0].shape[_runtimeModel.inputs[0].shape.Length - 1];
+        _inputShape = 505; //463;
+        print($"Input shape for the model: {_runtimeModel.outputs[0]}");
+        // _worker = WorkerFactory.CreateWorker(WorkerFactory.Type.CSharpRef, _runtimeModel);
+        _worker = WorkerFactory.CreateWorker(WorkerFactory.Type.Compute, _runtimeModel);
+        
         StartCoroutine(AskForDecision());
+
     }
 
     private Vector3 _movement;
+    private int _counter = 0;
+    private float _jump;
 
-    private int counter = 0;
     IEnumerator AskForDecision()
     {
         while (true)
         {
-            counter++;
-            if (counter == 3)
+            _counter++;
+            if (_counter == decisionFrequency)
             {
-                Vector3 localNorm = transform.localPosition / maxDistance;
-                Vector3 dir = (goal.transform.localPosition - transform.localPosition) / maxDistance;
+                List<float> obsList = new List<float>();
+                obsList.Add(_vectorObservation.GetObservation());
+        
+                if (_navigationAgent.useLocalRaycasts)
+                {
+                    obsList.Add(_localRaycastObservation.GetObservation());
+                }
+                
+                if (_navigationAgent.useDepthMask)
+                {
+                    obsList.Add(_depthMaskObservation.GetObservation());
+                }
+                
+                if (_navigationAgent.useOccupancyGrid)
+                {
+                    obsList.Add(_occupancyGridObservation.GetObservation());
+                }
 
-                float[] obs = {localNorm.x, localNorm.y, localNorm.z, dir.x, dir.y, dir.z};
-                Tensor input = new Tensor(1, 6, obs);
-                worker.Execute(input);
-            
-                Tensor output = worker.PeekOutput("21");
-                float[] _movementArray = output.ToReadOnlyArray();
-                _movement = new Vector3(_movementArray[0], _movementArray[2], _movementArray[1]) * mult;
-                print(_movement);
+                Tensor input = new Tensor(1, _inputShape, obsList.ToArray());
+                _worker.Execute(input);
+                Tensor output = _worker.PeekOutput();
+                float[] movementArray = output.ToReadOnlyArray();
+                
+                
+                
+                _movement = new Vector3(movementArray[0], 0, movementArray[1]);
+                _movement =  Quaternion.AngleAxis(-transform.rotation.eulerAngles.y + 90, Vector3.up) * _movement;
+                _jump = movementArray[2];
                 input.Dispose();
                 output.Dispose();
-                counter = 0;
+                _counter = 0;
             }
             yield return null;
         }
-        yield return null;
-    }
-    private void Update()
-    {
-        
     }
 
     public Vector3 GetMoveInput()
@@ -77,7 +109,7 @@ public class inferer : MonoBehaviour, InputHandler
 
     public bool GetJumpInputDown()
     {
-        return false;
+        return _jump > .5f;
     }
 
     public bool GetSprintInputHeld()

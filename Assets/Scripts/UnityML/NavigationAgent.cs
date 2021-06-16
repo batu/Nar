@@ -1,43 +1,77 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
+using Unity.MLAgents.Policies;
 using Unity.MLAgents.Sensors;
-using Random = System.Random;
 
 // ReSharper disable once CheckNamespace
 public class NavigationAgent :  Agent, InputHandler
 {
     public GameObject goal;
 
-    [Header("Observation")]
-    public int occupancyGridXZ = 2;
-    public int occupancyGridY = 1;
-
+    [Header("Observations")]
+    public bool useAbsolutePositions = true;
+    [SerializeField] public bool useDepthMask = true;
+    [SerializeField] public bool useOccupancyGrid = true;
+    [SerializeField] public bool useLocalRaycasts = true;
+    
+    [Header("Actions")]
+    public bool useRotation = false;
+    
+    private DepthMaskObservation _depthMaskObservation;
+    private OccupancyGridObservation _occupancyGridObservation;
+    private LocalRaycastObservation _localRaycastObservation;
+    private VectorObservation _vectorObservation;
+    
     [HideInInspector]
     public float maxDistance = 100 * 1.41f;
-
-
+    private bool _agentDone = false;
+    private bool _success = false;
+    
     // Movement
     private PlayerCharacterController _characterController;
+    private DecisionRequester _decisionRequester;
     private Vector3 _movement;
-    private float jump = 0;
+    private float _jump = 0;
+    private float _rotationX = 0;
+    private float _rotationY = 0;
 
     // Reward
-    const float existentialPunishment = -1f / 1024f;
-    private float lastDistance;
-    private float lastShapeReward = 0;
-
-    public EnvOccupancyGrid occupancyGrid;
+    [Header("Rewards")] [SerializeField]
+    bool useDense = true;
+    [SerializeField]
+    bool usePBRS = true;
+    
+    private float _existentialPunishment = -1f / 100f;
+    private float _lastDistance;
+    private float _lastShapeReward = 0;
 
     public delegate void EpisodeStarted();
     public EpisodeStarted StartEpisode;
 
-    void Start()
+    private void Awake()
     {
+        if (useRotation)
+        {
+            BehaviorParameters behaviorParameters = GetComponent<BehaviorParameters>();
+            behaviorParameters.BrainParameters.ActionSpec = ActionSpec.MakeContinuous(5);
+        }
+    }
+
+    void Start()
+    { 
         _characterController = GetComponent<PlayerCharacterController>();
+        _decisionRequester = GetComponent<DecisionRequester>();
+        
+        _vectorObservation = GetComponent<VectorObservation>();
+        _depthMaskObservation = GetComponent<DepthMaskObservation>();
+        _localRaycastObservation = GetComponent<LocalRaycastObservation>();
+        
+        _occupancyGridObservation = GetComponent<OccupancyGridObservation>();
+        
+        _existentialPunishment = -1f / ((float)MaxStep / _decisionRequester.DecisionPeriod);
     }
     private void Update()
     {
@@ -45,13 +79,23 @@ public class NavigationAgent :  Agent, InputHandler
         {
             EndEpisode();
         }
+
+        if (!_agentDone && transform.position.y < -15)
+        {
+            _agentDone = true;
+            _success = false;
+        }
     }
+    
 
     public override void OnEpisodeBegin()
     {
-        StartEpisode();
-        lastDistance = Vector3.Distance(transform.position, goal.transform.position) / maxDistance;
-        lastShapeReward = 0;
+        StartEpisode?.Invoke();
+        _success = false;
+        _agentDone = false;
+        _lastDistance = Vector3.Distance(transform.position, goal.transform.position) / maxDistance;
+        _lastShapeReward = 0;
+
     }
     
 
@@ -67,48 +111,77 @@ public class NavigationAgent :  Agent, InputHandler
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         float xMovement = Mathf.Clamp(actionBuffers.ContinuousActions[0],-1f, 1f);
-        float zMovement= Mathf.Clamp(actionBuffers.ContinuousActions[1],-1f, 1f);
-        jump = Mathf.Clamp(actionBuffers.ContinuousActions[2], -1f, 1f);
+        float zMovement = Mathf.Clamp(actionBuffers.ContinuousActions[1],-1f, 1f);
         _movement = new Vector3(xMovement, 0f, zMovement);
+
+        _jump = Mathf.Clamp(actionBuffers.ContinuousActions[2], -1f, 1f);
+
+        _rotationX = useRotation ?  Mathf.Clamp(actionBuffers.ContinuousActions[3],-1f, 1f) : 0;
+        _rotationY = useRotation ?  Mathf.Clamp(actionBuffers.ContinuousActions[4],-1f, 1f) : 0;
+
+        if (_agentDone)
+        {
+            _jump = 0;
+            _movement = Vector3.zero;
+            _rotationX = 0;
+            _rotationY = 0;
+        }
     }
     
     public override void CollectObservations(VectorSensor sensor)
     {
-        var localPosition = transform.localPosition;
-        var goalPosition = goal.transform.localPosition;
+       
+        sensor.AddObservation(_vectorObservation.GetObservation());
 
-        sensor.AddObservation(localPosition / maxDistance);
-        sensor.AddObservation(goalPosition / maxDistance);
+        if (useLocalRaycasts)
+        {
+            sensor.AddObservation(_localRaycastObservation.GetObservation());
+        }
+        
+        if (useDepthMask)
+        {
+            sensor.AddObservation(_depthMaskObservation.GetObservation());
+        }
+        
+        if (useOccupancyGrid)
+        {
+            sensor.AddObservation(_occupancyGridObservation.GetObservation());
+        }
 
-        Vector3 dir = goalPosition - localPosition;
-        sensor.AddObservation(dir / maxDistance);
-        sensor.AddObservation(dir.normalized);
-        sensor.AddObservation(dir.magnitude / maxDistance);
-        
-        sensor.AddObservation(_characterController.m_remainingJumpCount / 2f);
-        sensor.AddObservation(_characterController.characterVelocity / 10f);
-        sensor.AddObservation(_characterController.isGrounded);
-        
-        sensor.AddObservation(occupancyGrid.GetPlayerArea(localPosition, occupancyGridXZ, occupancyGridY, occupancyGridXZ));
         HandleReward();
     }
 
-    private void OnDrawGizmosSelected()
+  
+    private void FixedUpdate()
     {
-        // occupancyGrid.VisualizePlayerOccupancy(transform.localPosition, occupancyGridXZ, occupancyGridY, occupancyGridXZ);
+        if (_agentDone && Academy.Instance.StepCount % _decisionRequester.DecisionPeriod == 0)
+        {
+            if (_success)
+            {
+                AddReward(1f);
+            }
+            else
+            {
+                AddReward(-1f);
+            }
+            EndEpisode();
+        }
     }
-
 
     void HandleReward()
     {
         float thisDistance = Vector3.Distance(transform.position, goal.transform.position) / maxDistance;
-        float shapeReward = lastDistance - thisDistance;
-        AddReward(shapeReward);
-        AddReward(existentialPunishment);
-        AddReward(-lastShapeReward);
+        float shapeReward = _lastDistance - thisDistance;
+        AddReward(_existentialPunishment);
+
+        if (useDense)
+            AddReward(shapeReward);
+    
+        if (usePBRS)
+            AddReward(-_lastShapeReward * .99f);
         
-        lastDistance = thisDistance;
-        lastShapeReward = shapeReward;
+        _lastDistance = thisDistance;
+        _lastShapeReward = shapeReward;
     }
 
     void OnControllerColliderHit(ControllerColliderHit hit)
@@ -122,10 +195,12 @@ public class NavigationAgent :  Agent, InputHandler
         
         if (hit.transform.CompareTag("Goal"))
         {
-            AddReward(1f);
-            EndEpisode();
+            _agentDone = true;
+            _success = true;
         }
     }
+
+
 
     public Vector3 GetMoveInput()
     {
@@ -135,17 +210,17 @@ public class NavigationAgent :  Agent, InputHandler
     
     public float GetLookInputsHorizontal()
     {
-        return 0; // From mouse, camera direction
+        return _rotationX; // From mouse, camera direction
     }
 
     public float GetLookInputsVertical()
     {
-        return 0; // From mouse, camera direction
+        return _rotationY; // From mouse, camera direction
     }
 
     public bool GetJumpInputDown()
     {
-        return jump > .5f;
+        return _jump > .5f;
     }
 
 
@@ -154,12 +229,9 @@ public class NavigationAgent :  Agent, InputHandler
         return true; // Shift
     }
 
-    
-    
     public bool GetCrouchInputDown()
     {
         return false; // Ctrl
-
     }
 
   

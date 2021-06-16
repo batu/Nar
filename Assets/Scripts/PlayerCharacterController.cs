@@ -1,6 +1,9 @@
-﻿using UnityEditor;
+﻿using System;
+using Unity.MLAgents;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(CharacterController), typeof(InputHandler), typeof(AudioSource))]
 public class PlayerCharacterController : MonoBehaviour
@@ -15,7 +18,7 @@ public class PlayerCharacterController : MonoBehaviour
 
     [Header("General")]
     [Tooltip("Force applied downward when in the air")]
-    public float gravityDownForce = 20f;
+    public float gravityDownForce = 60f;
     [Tooltip("Physic layers checked to consider the player grounded")]
     public LayerMask groundCheckLayers = -1;
     [Tooltip("distance from the bottom of the character controller capsule to test for grounded")]
@@ -23,14 +26,14 @@ public class PlayerCharacterController : MonoBehaviour
 
     [Header("Movement")]
     [Tooltip("Max movement speed when grounded (when not sprinting)")]
-    public float maxSpeedOnGround = 10f;
+    public float maxSpeedOnGround = 15f;
     [Tooltip("Sharpness for the movement when grounded, a low value will make the player accelerate and decelerate slowly, a high value will do the opposite")]
     public float movementSharpnessOnGround = 15;
     [Tooltip("Max movement speed when crouching")]
     [Range(0,1)]
     public float maxSpeedCrouchedRatio = 0.5f;
     [Tooltip("Max movement speed when not grounded")]
-    public float maxSpeedInAir = 10f;
+    public float maxSpeedInAir = 15f;
     [Tooltip("Acceleration speed when in the air")]
     public float accelerationSpeedInAir = 25f;
     [Tooltip("Multiplicator for the sprint speed (based on grounded speed)")]
@@ -47,8 +50,9 @@ public class PlayerCharacterController : MonoBehaviour
 
     [Header("Jump")]
     [Tooltip("Force applied upward when jumping")]
-    public float jumpForce = 9f;
-    public int m_maxJumpCount = 2;
+    public float fallSpeedMultiplier = 1f;
+    public float jumpForce = 24f;
+    public int m_maxAirJumpCount = 1;
     internal int m_remainingJumpCount;
 
     [Header("Stance")]
@@ -94,21 +98,10 @@ public class PlayerCharacterController : MonoBehaviour
     public bool hasJumpedThisFrame { get; private set; }
     public bool isDead { get; private set; }
     public bool isCrouching { get; private set; }
-    public float RotationMultiplier
-    {
-        get
-        {
-            if (m_WeaponsManager.isAiming)
-            {
-                return aimingRotationMultiplier;
-            }
-
-            return 1f;
-        }
-    }
+    public float RotationMultiplier = 1;
 
     Health m_Health;
-    InputHandler m_InputHandler;
+    internal InputHandler m_InputHandler;
     CharacterController m_Controller;
     PlayerWeaponsManager m_WeaponsManager;
     Actor m_Actor;
@@ -120,20 +113,25 @@ public class PlayerCharacterController : MonoBehaviour
     float m_footstepDistanceCounter;
     float m_TargetCharacterHeight;
 
-
-    
-
     const float k_JumpGroundingPreventionTime = 0.2f;
     const float k_GroundCheckDistanceInAir = 0.07f;
 
-    WallRun wallRunComponent;
+    private bool _isJumpInputDown = false;
+    private bool _jumpedThisInput = false;
 
+    WallRun wallRunComponent;
+    private int jumpOnceNFrames;
+    public int jumpCooldown;
     void Start()
-    {
+    { 
         // fetch components on the same gameObject
         m_Controller = GetComponent<CharacterController>();
         DebugUtility.HandleErrorIfNullGetComponent<CharacterController, PlayerCharacterController>(m_Controller, this, gameObject);
 
+        DecisionRequester dr = GetComponent<DecisionRequester>();
+        jumpOnceNFrames = dr != null ? dr.DecisionPeriod: 10;
+        jumpCooldown = jumpOnceNFrames;
+        
         m_InputHandler = GetComponent<InputHandler>();
         if (m_InputHandler == null)
         {
@@ -141,26 +139,24 @@ public class PlayerCharacterController : MonoBehaviour
                            " expected to find a component of type " + typeof(InputHandler) + " on GameObject " + gameObject.name + ", but none were found.");
         }
 
-        m_WeaponsManager = GetComponent<PlayerWeaponsManager>();
-        DebugUtility.HandleErrorIfNullGetComponent<PlayerWeaponsManager, PlayerCharacterController>(m_WeaponsManager, this, gameObject);
-
         m_Health = GetComponent<Health>();
-        DebugUtility.HandleErrorIfNullGetComponent<Health, PlayerCharacterController>(m_Health, this, gameObject);
-
-        m_Actor = GetComponent<Actor>();
-        DebugUtility.HandleErrorIfNullGetComponent<Actor, PlayerCharacterController>(m_Actor, this, gameObject);
-
         wallRunComponent = GetComponent<WallRun>();
 
         m_Controller.enableOverlapRecovery = true;
+        m_remainingJumpCount = m_maxAirJumpCount;
 
-        m_remainingJumpCount = m_maxJumpCount;
-
-        m_Health.onDie += OnDie;
+        if (m_Health != null)
+            m_Health.onDie += OnDie;
 
         // force the crouch state to false when starting
         SetCrouchingState(false, true);
         UpdateCharacterHeight(true);
+    }
+
+    private void FixedUpdate()
+    {
+        jumpCooldown--;
+        jumpCooldown = Mathf.Max(jumpCooldown, 0);
     }
 
     void Update()
@@ -168,7 +164,8 @@ public class PlayerCharacterController : MonoBehaviour
         // check for Y kill
         if(!isDead && transform.position.y < killHeight)
         {
-            m_Health.Kill();
+            if (m_Health != null)
+                m_Health.Kill();
         }
 
         hasJumpedThisFrame = false;
@@ -187,10 +184,9 @@ public class PlayerCharacterController : MonoBehaviour
         }
 
         UpdateCharacterHeight(false);
-        
         HandleCharacterMovement();
     }
-
+    
     private void HandleLanding(bool wasGrounded)
     {
         if (isGrounded && !wasGrounded)
@@ -201,7 +197,6 @@ public class PlayerCharacterController : MonoBehaviour
             if (recievesFallDamage && fallSpeedRatio > 0f)
             {
                 float dmgFromFall = Mathf.Lerp(fallDamageAtMinSpeed, fallDamageAtMaxSpeed, fallSpeedRatio);
-                // m_Health.TakeDamage(dmgFromFall, null);
 
                 // fall damage SFX
                 // audioSource.PlayOneShot(fallDamageSFX);
@@ -246,7 +241,7 @@ public class PlayerCharacterController : MonoBehaviour
                     IsNormalUnderSlopeLimit(m_GroundNormal))
                 {
                     isGrounded = true;
-                    m_remainingJumpCount = m_maxJumpCount;
+                    m_remainingJumpCount = m_maxAirJumpCount;
 
                     // handle snapping to the ground
                     if (hit.distance > m_Controller.skinWidth)
@@ -294,7 +289,15 @@ public class PlayerCharacterController : MonoBehaviour
         float speedModifier = isSprinting ? sprintSpeedModifier : 1f;
 
         // converts move input to a worldspace vector based on our character's transform orientation
-        Vector3 worldspaceMoveInput = transform.TransformVector(m_InputHandler.GetMoveInput());
+        Vector3 moveInput =  m_InputHandler.GetMoveInput();
+        if (Mathf.Abs(moveInput.x) > 1 || Mathf.Abs(moveInput.z) > 1)
+        {
+            // Debug.LogError("MoveInput is received higher than 1!");
+        }
+        Vector3 clippedMoveInput = new Vector3(Mathf.Clamp(moveInput.x, -1f, 1f),
+                                               Mathf.Clamp(moveInput.y, -1f, 1f),
+                                               Mathf.Clamp(moveInput.z, -1f, 1f));
+        Vector3 worldspaceMoveInput = transform.TransformVector(clippedMoveInput);
 
 
         // jumping
@@ -344,14 +347,17 @@ public class PlayerCharacterController : MonoBehaviour
                 horizontalVelocity = Vector3.ClampMagnitude(horizontalVelocity, maxSpeedInAir * speedModifier);
                 characterVelocity = horizontalVelocity + (Vector3.up * verticalVelocity);
 
+                float gravityMultiplier = verticalVelocity < 0 ? fallSpeedMultiplier : 1;
                 // apply the gravity to the velocity
-                characterVelocity += Vector3.down * gravityDownForce * Time.deltaTime;
+                characterVelocity += Vector3.down * gravityDownForce * gravityMultiplier * Time.deltaTime;
             }
         }
 
         // apply the final calculated velocity value as a character movement
         Vector3 capsuleBottomBeforeMove = GetCapsuleBottomHemisphere();
         Vector3 capsuleTopBeforeMove = GetCapsuleTopHemisphere(m_Controller.height);
+        // print($"Char velocity: {characterVelocity}");
+        // print($"Char velocity * timeDelta: {characterVelocity * Time.deltaTime}");
         m_Controller.Move(characterVelocity * Time.deltaTime);
 
         // detect obstructions to adjust velocity accordingly
@@ -366,23 +372,19 @@ public class PlayerCharacterController : MonoBehaviour
     }
 
 
-    // private void HandleDash()
-    // {
-    //     Vector3 dashDirection = playerCamera.transform.forward;
-    //     Debug.DrawRay(playerCamera.transform.position, dashDirection * publiclen);
-    //     if (m_remainingJumpCount > 0 && m_InputHandler.GetDashInputDown())
-    //     {
-    //         characterVelocity += dashDirection * 100f;
-    //     }
-    // }
-    
     private void HandleJump()
     {
         // Get jumps back if wall running.
-        m_remainingJumpCount = wallRunComponent.IsWallRunning() ? m_maxJumpCount : m_remainingJumpCount; 
+        m_remainingJumpCount = wallRunComponent.IsWallRunning() ? m_maxAirJumpCount : m_remainingJumpCount;
+        
         if ((m_remainingJumpCount > 0 || (wallRunComponent != null && wallRunComponent.IsWallRunning())) &&
-            m_InputHandler.GetJumpInputDown())
+            m_InputHandler.GetJumpInputDown() && jumpCooldown == 0)
         {
+            jumpCooldown = jumpOnceNFrames;
+            
+            // If you are in the ground and jumping, you get a "free" ground jump before you start using your "air" jumps
+            if (isGrounded) m_remainingJumpCount++;
+            
             // force the crouch state to false
             if (SetCrouchingState(false, false))
             {
@@ -448,7 +450,6 @@ public class PlayerCharacterController : MonoBehaviour
             m_Controller.height = m_TargetCharacterHeight;
             m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
             playerCamera.transform.localPosition = Vector3.up * m_TargetCharacterHeight * cameraHeightRatio;
-            m_Actor.aimPoint.transform.localPosition = m_Controller.center;
         }
         // Update smooth height
         else if (m_Controller.height != m_TargetCharacterHeight)
@@ -457,7 +458,6 @@ public class PlayerCharacterController : MonoBehaviour
             m_Controller.height = Mathf.Lerp(m_Controller.height, m_TargetCharacterHeight, crouchingSharpness * Time.deltaTime);
             m_Controller.center = Vector3.up * m_Controller.height * 0.5f;
             playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, Vector3.up * m_TargetCharacterHeight * cameraHeightRatio, crouchingSharpness * Time.deltaTime);
-            m_Actor.aimPoint.transform.localPosition = m_Controller.center;
         }
     }
 

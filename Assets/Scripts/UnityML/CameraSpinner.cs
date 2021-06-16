@@ -20,12 +20,13 @@ public class CameraSpinner : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
+    { 
+    
         transform.RotateAround(target.position, Vector3.up, speed * Time.deltaTime);
         transform.LookAt(target.position, Vector3.up);
         
-        MoveGoalToMouse();
-        MovePlayerToMouse();
+        // MoveGoalToMouse();
+        // MovePlayerToMouse();
     }
 
     void MovePlayerToMouse()

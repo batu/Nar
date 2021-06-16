@@ -10,11 +10,11 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Ghost
   - Water
   - UI
-  - 
-  - 
+  - Player
+  - DeathZone
   - PostProcessing
   - 
   - FirstPersonWeapon
