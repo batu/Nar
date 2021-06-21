@@ -31,12 +31,14 @@ public class OccupancyGridObservation : MonoBehaviour, IObservation
             _occupancyGrid.VisualizePlayerOccupancy(_navigationAgent.transform, OccupancyObsCountXZ, OccupancyObsCountY, OccupancyObsCountXZ );
         }
     }
-         
-    void Start()
-    {  
+
+    void Awake()
+    {
         _navigationAgent = GetComponent<NavigationAgent>();
         _agentTransform = _navigationAgent.transform;
-         
+    }
+    void Start()
+    {  
         if (_occupancyGrid.Occupancy == null) 
         {
             if (transform.parent.GetComponent<EpisodeHandler>() == null)

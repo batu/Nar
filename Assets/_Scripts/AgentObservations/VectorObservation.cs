@@ -13,7 +13,7 @@ public class VectorObservation : MonoBehaviour, IObservation
     private float _maxDistance;
     private bool _useAbsolutePositions;
     
-    void Start()
+    void Awake()
     {
         _navigationAgent = GetComponent<NavigationAgent>();
         _playerCharacterController = GetComponent<PlayerCharacterController>();

@@ -116,9 +116,6 @@ public class PlayerCharacterController : MonoBehaviour
     const float k_JumpGroundingPreventionTime = 0.2f;
     const float k_GroundCheckDistanceInAir = 0.07f;
 
-    private bool _isJumpInputDown = false;
-    private bool _jumpedThisInput = false;
-
     WallRun wallRunComponent;
     private int jumpOnceNFrames;
     public int jumpCooldown;

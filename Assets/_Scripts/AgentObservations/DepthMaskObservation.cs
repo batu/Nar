@@ -18,7 +18,7 @@ public class DepthMaskObservation : MonoBehaviour, IObservation
     public Transform aimPoint;
     private bool _agentCanRotate = false;
 
-    private void Start()
+    private void Awake()
     {
         _playerCharacterController = GetComponent<PlayerCharacterController>();
         _navigationAgent = GetComponent<NavigationAgent>();

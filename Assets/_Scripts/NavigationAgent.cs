@@ -58,18 +58,19 @@ public class NavigationAgent :  Agent, InputHandler
             BehaviorParameters behaviorParameters = GetComponent<BehaviorParameters>();
             behaviorParameters.BrainParameters.ActionSpec = ActionSpec.MakeContinuous(5);
         }
-    }
-
-    void Start()
-    { 
+        
         _characterController = GetComponent<PlayerCharacterController>();
         _decisionRequester = GetComponent<DecisionRequester>();
         
         _vectorObservation = GetComponent<VectorObservation>();
         _depthMaskObservation = GetComponent<DepthMaskObservation>();
         _whiskerObservation = GetComponent<WhiskerObservation>();
-        
         _occupancyGridObservation = GetComponent<OccupancyGridObservation>();
+    }
+
+    void Start()
+    { 
+
         
         _existentialPunishment = -1f / ((float)MaxStep / _decisionRequester.DecisionPeriod);
     }
@@ -130,7 +131,6 @@ public class NavigationAgent :  Agent, InputHandler
     
     public override void CollectObservations(VectorSensor sensor)
     {
-       
         sensor.AddObservation(_vectorObservation.GetObservation());
 
         if (useLocalRaycasts)

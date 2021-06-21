@@ -32,8 +32,7 @@ public class EpisodeHandler : MonoBehaviour
     private readonly Collider[] _dummyCollider = new Collider[0];
     private TrailRenderer _trailRenderer;
 
-    [SerializeField]
-    private float curriculumEndStep = -1;
+    public float curriculumEndStep = -1;
 
     private float _startCurriculumDistance = 10f;
     private float _maxCurriculumDistance = 100f;
@@ -51,11 +50,12 @@ public class EpisodeHandler : MonoBehaviour
 
         _agentInitialPosition = Agent.position;
         _goalInitialPosition = Goal.position;
+        _trailRenderer = Agent.GetComponentInChildren<TrailRenderer>();
+
     }
 
     private void Start()
     {
-        _trailRenderer = Agent.GetComponentInChildren<TrailRenderer>();
     }
     
 
@@ -138,7 +138,6 @@ public class EpisodeHandler : MonoBehaviour
         Agent.position = raycastHitPos + new Vector3(0, 1, 0);
         _trailRenderer.Clear();
     }
-
 
     void MoveAgenttoInitialPlace()
     {
