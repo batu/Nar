@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using Unity.MLAgents;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
@@ -36,6 +37,9 @@ public class EpisodeHandler : MonoBehaviour
 
     private float _startCurriculumDistance = 10f;
     private float _maxCurriculumDistance = 100f;
+    
+    private EnvironmentParameters _envParameters;
+
 
     // Start is called before the first frame update
     private void Awake()
@@ -47,10 +51,13 @@ public class EpisodeHandler : MonoBehaviour
         zLen = Ground.GetComponent<BoxCollider>().bounds.size.z;
         maxDistance = Mathf.Sqrt(xLen * xLen + zLen * zLen);
         agentScript.maxDistance = maxDistance;
-
+        _maxCurriculumDistance = maxDistance;
+        
         _agentInitialPosition = Agent.position;
         _goalInitialPosition = Goal.position;
         _trailRenderer = Agent.GetComponentInChildren<TrailRenderer>();
+        
+        _envParameters = Academy.Instance.EnvironmentParameters;
 
     }
 
@@ -61,9 +68,12 @@ public class EpisodeHandler : MonoBehaviour
 
     public void RestartEpisode()
     {
+        _testing = 0 < _envParameters.GetWithDefault("testing", 0);
         
         MoveAgentRandomly();
-        if (Academy.Instance.TotalStepCount > curriculumEndStep)
+        
+        bool curriculumActive = Academy.Instance.TotalStepCount < curriculumEndStep;
+        if (!curriculumActive || _testing)
         {
             MoveGoalRandomly();
         }
@@ -71,6 +81,8 @@ public class EpisodeHandler : MonoBehaviour
         {
             MoveGoalClose();
         }
+        Debug.LogError($"Currently testing: {_testing} at step {Academy.Instance.TotalStepCount}");
+
         
         // MoveAgenttoInitialPlace();
         // MoveGoaltoInitialPlace();
@@ -178,6 +190,8 @@ public class EpisodeHandler : MonoBehaviour
     }
 
     private int freeBreaker = 0;
+    private bool _testing = false;
+
     bool IsSpawnPointFree(Vector3 point)
     {
         if (point == Vector3.zero) return false;

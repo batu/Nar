@@ -69,9 +69,7 @@ public class NavigationAgent :  Agent, InputHandler
     }
 
     void Start()
-    { 
-
-        
+    {
         _existentialPunishment = -1f / ((float)MaxStep / _decisionRequester.DecisionPeriod);
     }
     private void Update()

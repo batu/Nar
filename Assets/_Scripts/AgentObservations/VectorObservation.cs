@@ -41,9 +41,9 @@ public class VectorObservation : MonoBehaviour, IObservation
         int isGroundedInt = _playerCharacterController.isGrounded ? 1 : 0; 
         vectorResults.Add((_playerCharacterController.m_remainingJumpCount + isGroundedInt) / 2f); // 8
 
-        vectorResults.Add(_playerCharacterController.characterVelocity.x /  _playerCharacterController.maxSpeedOnGround); // 9
+        vectorResults.Add(_playerCharacterController.characterVelocity.x /  (_playerCharacterController.maxSpeedOnGround * 5)); // 9
         vectorResults.Add(Mathf.Clamp(_playerCharacterController.characterVelocity.y / (_playerCharacterController.maxSpeedInAir * 5), -1, 1)); // 10
-        vectorResults.Add(_playerCharacterController.characterVelocity.z / _playerCharacterController.maxSpeedOnGround); // 11
+        vectorResults.Add(_playerCharacterController.characterVelocity.z / (_playerCharacterController.maxSpeedOnGround * 5)); // 11
         
         vectorResults.Add(_playerCharacterController.isGrounded); // 12
 
