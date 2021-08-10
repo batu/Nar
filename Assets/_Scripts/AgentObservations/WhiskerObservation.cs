@@ -27,11 +27,6 @@ public class WhiskerObservation : MonoBehaviour, IObservation
         _shouldRotate = _navigationAgent.useRotation;
     }
 
-    private void FixedUpdate()
-    {
-        GetSurroundingRaycasts();
-        GetGroundRaycasts();
-    }
 
     float[] GetSurroundingRaycasts()
     {

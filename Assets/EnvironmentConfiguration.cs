@@ -25,7 +25,7 @@ public class EnvironmentConfiguration : MonoBehaviour
         int numEnvs = (int) _envParameters.GetWithDefault("env_count", 32);
         for (int i = 1; i < numEnvs; i++)
         {
-            float seperationDistance = 150f;
+            float seperationDistance = 250f;
             float xPos = i % 5 * seperationDistance;
             float zPos = i / 5 * seperationDistance;
             Vector3 spawnPosition = new Vector3(xPos, 0, zPos);
@@ -35,7 +35,7 @@ public class EnvironmentConfiguration : MonoBehaviour
 
     private void UpdateCurriculum()
     {
-        _episodeHandler.curriculumEndStep = _envParameters.GetWithDefault("curriculum_length", -1);
+        _episodeHandler.curriculumEndStep = _envParameters.GetWithDefault("curriculum_length", 5000000);
     }
 
 }
