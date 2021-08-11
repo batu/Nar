@@ -6,7 +6,7 @@ public class ConfigurationManager : MonoBehaviour
 {
     private EnvironmentConfiguration _environmentConfiguration;
     private AgentConfiguration _agentConfiguration;
-    void Start()
+    void Awake()
     {
         
         _agentConfiguration = GetComponent<AgentConfiguration>();

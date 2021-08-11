@@ -39,6 +39,8 @@ public class EpisodeHandler : MonoBehaviour
     private float _maxCurriculumDistance = 100f;
     
     private EnvironmentParameters _envParameters;
+    float _numEnvsAdjustment;
+
 
 
     // Start is called before the first frame update
@@ -58,6 +60,7 @@ public class EpisodeHandler : MonoBehaviour
         _trailRenderer = Agent.GetComponentInChildren<TrailRenderer>();
         
         _envParameters = Academy.Instance.EnvironmentParameters;
+        _numEnvsAdjustment = _envParameters.GetWithDefault("env_count", 32) / 10f;
 
     }
 
@@ -72,7 +75,7 @@ public class EpisodeHandler : MonoBehaviour
         
         MoveAgentRandomly();
         
-        bool curriculumActive = Academy.Instance.TotalStepCount < curriculumEndStep;
+        bool curriculumActive = Academy.Instance.TotalStepCount * _numEnvsAdjustment < curriculumEndStep;
         if (!curriculumActive || _testing)
         {
             MoveGoalRandomly();
@@ -81,8 +84,7 @@ public class EpisodeHandler : MonoBehaviour
         {
             MoveGoalClose();
         }
-        Debug.LogError($"Currently testing: {_testing} at step {Academy.Instance.TotalStepCount}");
-
+        Debug.LogError($"Currently testing: {_testing} at step {Academy.Instance.TotalStepCount * _numEnvsAdjustment}");
         
         // MoveAgenttoInitialPlace();
         // MoveGoaltoInitialPlace();
@@ -92,7 +94,7 @@ public class EpisodeHandler : MonoBehaviour
     // ReSharper disable Unity.PerformanceAnalysis
     void MoveGoalClose()
     {
-        float t = Academy.Instance.TotalStepCount / curriculumEndStep;
+        float t = Academy.Instance.TotalStepCount * _numEnvsAdjustment/ curriculumEndStep;
         float curriculumSpawnDistance = Mathf.Lerp(_startCurriculumDistance, _maxCurriculumDistance, t);
         Vector3 raycastHitPos;
         int breaker = 0;
@@ -123,14 +125,14 @@ public class EpisodeHandler : MonoBehaviour
         Vector3 raycastHitPos;
         do {
             raycastHitPos = SampleRandomSpawnPoint();
-            freeBreaker++;
-            if (freeBreaker > 100)
+            _freeBreaker++;
+            if (_freeBreaker > 100)
             {
                 print("BROKEN");
                 break;
             }
         } while (!IsSpawnPointFree(raycastHitPos));
-        freeBreaker = 0;
+        _freeBreaker = 0;
         Goal.position = raycastHitPos  + new Vector3(0, 2, 0);
     }
     
@@ -139,14 +141,14 @@ public class EpisodeHandler : MonoBehaviour
         Vector3 raycastHitPos;
         do {
             raycastHitPos = SampleRandomSpawnPoint();
-            freeBreaker++;
-            if (freeBreaker > 100)
+            _freeBreaker++;
+            if (_freeBreaker > 100)
             {
                 print("BROKEN");
                 break;
             }
         } while (!IsSpawnPointFree(raycastHitPos));
-        freeBreaker = 0;
+        _freeBreaker = 0;
         Agent.position = raycastHitPos + new Vector3(0, 1, 0);
         _trailRenderer.Clear();
     }
@@ -189,7 +191,7 @@ public class EpisodeHandler : MonoBehaviour
         return hit.point;
     }
 
-    private int freeBreaker = 0;
+    private int _freeBreaker = 0;
     private bool _testing = false;
 
     bool IsSpawnPointFree(Vector3 point)
