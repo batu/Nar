@@ -36,12 +36,10 @@ public class EpisodeHandler : MonoBehaviour
     public float curriculumEndStep = -1;
 
     private float _startCurriculumDistance = 10f;
-    private float _maxCurriculumDistance = 100f;
+    private float _maxCurriculumDistance;
     
     private EnvironmentParameters _envParameters;
     float _numEnvsAdjustment;
-
-
 
     // Start is called before the first frame update
     private void Awake()
@@ -71,7 +69,7 @@ public class EpisodeHandler : MonoBehaviour
 
     public void RestartEpisode()
     {
-        _testing = 0 < _envParameters.GetWithDefault("testing", 0);
+        _testing = false; 
         
         MoveAgentRandomly();
         
@@ -84,7 +82,6 @@ public class EpisodeHandler : MonoBehaviour
         {
             MoveGoalClose();
         }
-        Debug.LogError($"Currently testing: {_testing} at step {Academy.Instance.TotalStepCount * _numEnvsAdjustment}");
         
         // MoveAgenttoInitialPlace();
         // MoveGoaltoInitialPlace();

@@ -150,7 +150,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4141039170186238303}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!114 &185587255807260397
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -480,7 +480,7 @@ MonoBehaviour:
   movementSharpnessOnGround: 15
   maxSpeedCrouchedRatio: 0.5
   maxSpeedInAir: 15
-  accelerationSpeedInAir: 25
+  accelerationSpeedInAir: 80
   sprintSpeedModifier: 2
   killHeight: -50
   rotationSpeed: 200
@@ -517,7 +517,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a411cdfc3d9f774a9f4efafda1310e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canWallRun: 1
+  canWallRun: 0
   wallMaxDistance: 1
   wallSpeedMultiplier: 1.2
   minimumHeight: 1.2
@@ -657,7 +657,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b58b7dc56b17634989b66826f3fce59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _occupancyGrid: {fileID: 11400000, guid: 33b76ff39fa944b4baefda4f07406507, type: 2}
+  _occupancyGrid: {fileID: 11400000, guid: d921974421adfb547b05e5e2b446d0c5, type: 2}
   OccupancyObsCountXZ: 4
   OccupancyObsCountY: 2
   visualizeOccupancyGrid: 0

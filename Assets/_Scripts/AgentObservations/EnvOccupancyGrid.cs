@@ -38,6 +38,11 @@ public class EnvOccupancyGrid : ScriptableObject
         _episodeHandler = env.GetComponent<EpisodeHandler>();
         _envPosition = env.position;
 
+        if (env.rotation.y != 0)
+        {
+            Debug.LogError("The rotation of the environment needs to be set to 0!");
+        }
+
         if (_episodeHandler == null)
         {
             Debug.LogError("The EnvOccupancyGrid couldn't find the _episodeHandler. This might be caused by the env not being set correctly." +
