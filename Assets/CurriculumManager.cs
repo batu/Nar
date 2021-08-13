@@ -7,14 +7,18 @@ using UnityEngine;
 public class CurriculumManager : MonoBehaviour
 {
     // Start is called before the first frame update
+    [HideInInspector]
     public bool Testing { get; set; }
 
+    public bool UseAutomaticCurriculum = true;
     public float curriculumIncreaseThreshold = .8f;
     public float curriculumIncreaseAmount = 5f;
 
     private readonly Queue<int> _successes = new Queue<int>();
-    public bool curriculumActive;
 
+    [HideInInspector]
+    public bool curriculumActive;
+    [HideInInspector]
     public float currentCurriculumDistance = 5f;
     private EnvironmentParameters _envParameters;
 

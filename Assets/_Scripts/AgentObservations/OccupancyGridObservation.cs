@@ -45,7 +45,6 @@ public class OccupancyGridObservation : MonoBehaviour, IObservation
             {
                 Debug.LogWarning("The parent object should be the Environment. This might cause problems.");
             } 
-            _occupancyGrid.env = transform.parent;
             _occupancyGrid.CreateOccupancyDict();
             print($"New Occupancy Grid has been created.");
         }

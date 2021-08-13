@@ -79,8 +79,6 @@ public class Inferer : MonoBehaviour, InputHandler
                 Tensor output = _worker.PeekOutput();
                 float[] movementArray = output.ToReadOnlyArray();
                 
-                
-                
                 _movement = new Vector3(movementArray[0], 0, movementArray[1]);
                 _movement =  Quaternion.AngleAxis(-transform.rotation.eulerAngles.y + 90, Vector3.up) * _movement;
                 _jump = movementArray[2];

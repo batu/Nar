@@ -15,6 +15,7 @@ public class AssistanceManager : MonoBehaviour, InputHandler
     private bool _jump;
 
     private PlayerInputHandler _playerInputHandler;
+    private NavigationAgent _navigationAgent;
     private IAssistance _assistance;
     private Inferer _inferer;
 
@@ -25,11 +26,18 @@ public class AssistanceManager : MonoBehaviour, InputHandler
     {
         _playerInputHandler = GetComponent<PlayerInputHandler>();
         _assistance = GetComponent<IAssistance>();
+        _navigationAgent = GetComponent<NavigationAgent>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (transform.position.y < -15)
+        {
+            _navigationAgent.StartEpisode();
+            return;
+        }
+        
         _movement = _playerInputHandler.GetMoveInput();
         _jump = _playerInputHandler.GetJumpInputDown();
 
@@ -82,6 +90,7 @@ public class AssistanceManager : MonoBehaviour, InputHandler
                     break;
             }
         }
+
 
     }
 

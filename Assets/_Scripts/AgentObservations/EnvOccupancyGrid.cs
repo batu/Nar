@@ -25,7 +25,8 @@ public class EnvOccupancyGrid : ScriptableObject
     private int _yHalfBoxCount;
     private int _zHalfBoxCount;
     const float PlayerHeightAdjustment = 0.9f;
-
+    private bool _triedRecovery = false;
+        
     private int _width;
     private int _height;
     private int _depth;
@@ -35,6 +36,7 @@ public class EnvOccupancyGrid : ScriptableObject
 
         Debug.Log("Created new occupancy dict."); 
         Occupancy = new Dictionary<Vector3Int, bool>();
+        env = GameObject.FindWithTag("Env").transform;
         _episodeHandler = env.GetComponent<EpisodeHandler>();
         _envPosition = env.position;
 
@@ -201,7 +203,12 @@ public class EnvOccupancyGrid : ScriptableObject
                     }
                     catch (IndexOutOfRangeException)
                     {
-                        Debug.LogError($"Error when looking up the occupancy box. The player pos:{playerPosition} and index: {index}. It is possible the agent fell went out of bounds. Handled as empty occupancy.");
+                        Debug.LogError($"Error when looking up the occupancy box. The player pos:{playerPosition} and index: {index}. It is possible the agent fell went out of bounds. Handled as empty occupancy. Tried recovery: {_triedRecovery}");
+                        if (!_triedRecovery)
+                        {
+                            _triedRecovery = true;
+                            CreateOccupancyDict();
+                        }
                     }  
                     occupancyObservation.Add(value);
                 }

@@ -41,10 +41,13 @@ public class EpisodeHandler : MonoBehaviour
     private EnvironmentParameters _envParameters;
     float _numEnvsAdjustment;
 
+    private PlayerCharacterController _characterController;
     // Start is called before the first frame update
     private void Awake()
     {
         NavigationAgent agentScript = Agent.GetComponent<NavigationAgent>();
+        _characterController = Agent.GetComponent<PlayerCharacterController>();
+        
         agentScript.StartEpisode += RestartEpisode;
         
         xLen = Ground.GetComponent<BoxCollider>().bounds.size.x;
@@ -146,6 +149,8 @@ public class EpisodeHandler : MonoBehaviour
             }
         } while (!IsSpawnPointFree(raycastHitPos));
         _freeBreaker = 0;
+
+        _characterController.characterVelocity = Vector3.zero;
         Agent.position = raycastHitPos + new Vector3(0, 1, 0);
         _trailRenderer.Clear();
     }

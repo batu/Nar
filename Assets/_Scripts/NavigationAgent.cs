@@ -81,11 +81,16 @@ public class NavigationAgent :  Agent, InputHandler
 
         if (!_agentDone && transform.position.y < -15)
         {
-            _agentDone = true;
-            _success = false;
+            AgentDied();
         }
     }
-    
+
+    public void AgentDied()
+    {
+        _agentDone = true;
+        _success = false;
+    }
+
 
     public override void OnEpisodeBegin()
     {
