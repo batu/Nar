@@ -42,6 +42,10 @@ public class EpisodeHandler : MonoBehaviour
     float _numEnvsAdjustment;
 
     private PlayerCharacterController _characterController;
+    private FailedEpisodeReplay _failedEpisodeReplay;
+
+    private FailedEpisodeReplay.EpisodeSpecification _thisEpsiode;
+    
     // Start is called before the first frame update
     private void Awake()
     {
@@ -63,20 +67,19 @@ public class EpisodeHandler : MonoBehaviour
         _envParameters = Academy.Instance.EnvironmentParameters;
         _numEnvsAdjustment = _envParameters.GetWithDefault("env_count", 32) / 10f;
 
-    }
+        _failedEpisodeReplay = FindObjectOfType<FailedEpisodeReplay>();
 
-    private void Start()
-    {
     }
     
 
     public void RestartEpisode()
     {
         _testing = false; 
-        
+
+        int stepCount = (int) (Academy.Instance.TotalStepCount * _numEnvsAdjustment);
+        bool curriculumActive = stepCount < curriculumEndStep;
+
         MoveAgentRandomly();
-        
-        bool curriculumActive = Academy.Instance.TotalStepCount * _numEnvsAdjustment < curriculumEndStep;
         if (!curriculumActive || _testing)
         {
             MoveGoalRandomly();
@@ -85,12 +88,29 @@ public class EpisodeHandler : MonoBehaviour
         {
             MoveGoalClose();
         }
-        
+
+        bool failedEpisodeReplayActive = stepCount > _failedEpisodeReplay.failedEpisodeStart;
+        bool askForFailedEpisode = Random.Range(0, 1f) < _failedEpisodeReplay.episodeThreshold;
+        bool failedEpisodeAvailable = _failedEpisodeReplay.CanGetFailedEpisode();
+        if (failedEpisodeReplayActive &&  failedEpisodeAvailable && askForFailedEpisode)
+        {
+            FailedEpisodeReplay.EpisodeSpecification failedEpisode = _failedEpisodeReplay.GetFailedEpisode();
+            Agent.position = failedEpisode.AgentPos;
+            Goal.position = failedEpisode.GoalPos;
+        }
+
         // MoveAgenttoInitialPlace();
         // MoveGoaltoInitialPlace();
+        _thisEpsiode = new FailedEpisodeReplay.EpisodeSpecification(Agent.position, Goal.position);
         _trailRenderer.Clear();
     }
 
+
+    public void RecordFailedEpisode()
+    {
+        _failedEpisodeReplay.AddFailedEpisode(_thisEpsiode);
+    }
+    
     // ReSharper disable Unity.PerformanceAnalysis
     void MoveGoalClose()
     {

@@ -50,6 +50,7 @@ public class NavigationAgent :  Agent, InputHandler
 
     public delegate void EpisodeStarted();
     public EpisodeStarted StartEpisode;
+    private EpisodeHandler _episodeHandler;
 
     private void Awake()
     {
@@ -58,7 +59,10 @@ public class NavigationAgent :  Agent, InputHandler
             BehaviorParameters behaviorParameters = GetComponent<BehaviorParameters>();
             behaviorParameters.BrainParameters.ActionSpec = ActionSpec.MakeContinuous(5);
         }
-        
+
+
+        _episodeHandler = transform.parent.GetComponent<EpisodeHandler>();
+            
         _characterController = GetComponent<PlayerCharacterController>();
         _decisionRequester = GetComponent<DecisionRequester>();
         
@@ -165,6 +169,7 @@ public class NavigationAgent :  Agent, InputHandler
             }
             else
             {
+                _episodeHandler.RecordFailedEpisode();
                 AddReward(-1f);
             }
             EndEpisode();

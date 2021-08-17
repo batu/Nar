@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.MLAgents;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 public class EnvironmentConfiguration : MonoBehaviour
 {
@@ -10,16 +11,24 @@ public class EnvironmentConfiguration : MonoBehaviour
 
     private EpisodeHandler _episodeHandler;
     private EnvironmentParameters _envParameters;
-
+    private FailedEpisodeReplay _failedEpisodeReplay;
     public  void Configure()
     {
         _envParameters = Academy.Instance.EnvironmentParameters;
         _episodeHandler = Environment.GetComponent<EpisodeHandler>();
-        
+        _failedEpisodeReplay = GetComponent<FailedEpisodeReplay>();
+
+        UpdateFailedEpisodeReplay();
         UpdateCurriculum();
         UpdateEnvCount();
     }
-    
+
+    private void UpdateFailedEpisodeReplay()
+    {
+        _failedEpisodeReplay.episodeThreshold = _envParameters.GetWithDefault("failed_episode_threshold", 0.5f);
+        _failedEpisodeReplay.failedEpisodeStart = _envParameters.GetWithDefault("failed_episode_start", 10000000);
+    }
+
     private void UpdateEnvCount()
     {
         int numEnvs = (int) _envParameters.GetWithDefault("env_count", 32);
