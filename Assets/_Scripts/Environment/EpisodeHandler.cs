@@ -92,7 +92,7 @@ public class EpisodeHandler : MonoBehaviour
         bool failedEpisodeReplayActive = stepCount > _failedEpisodeReplay.failedEpisodeStart;
         bool askForFailedEpisode = Random.Range(0, 1f) < _failedEpisodeReplay.episodeThreshold;
         bool failedEpisodeAvailable = _failedEpisodeReplay.CanGetFailedEpisode();
-        if (failedEpisodeReplayActive &&  failedEpisodeAvailable && askForFailedEpisode)
+        if (!_testing && failedEpisodeReplayActive &&  failedEpisodeAvailable && askForFailedEpisode)
         {
             FailedEpisodeReplay.EpisodeSpecification failedEpisode = _failedEpisodeReplay.GetFailedEpisode();
             Agent.position = failedEpisode.AgentPos;
