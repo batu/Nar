@@ -42,6 +42,7 @@ public class AgentConfiguration : MonoBehaviour
         occupancyGridObservation.OccupancyObsCountY = (int) _envParameters.GetWithDefault("occupancy_y_len", 2);
         
         _obsList.Add(occupancyGridObservation.GetObservation());
+        print($"Occupancy Grid Size: {occupancyGridObservation.GetObservation().Length}");
     }
 
     private void UpdateDepthMaskObs()
@@ -52,6 +53,8 @@ public class AgentConfiguration : MonoBehaviour
         depthMaskObservation.rayDistance = _envParameters.GetWithDefault("depthmap_rayseperation", 2);
         
         _obsList.Add(depthMaskObservation.GetObservation());
+        print($"Depth Mask Observation: {depthMaskObservation.GetObservation().Length}");
+
     }
 
     private void UpdateWhiskerObs()
@@ -65,12 +68,15 @@ public class AgentConfiguration : MonoBehaviour
         whiskerObservation.groundMeshSeperation = _envParameters.GetWithDefault("whisker_groundrayseperation", 1);
         
         _obsList.Add(whiskerObservation.GetObservation());
+        print($"Whisker Observation: {whiskerObservation.GetObservation().Length}");
+
     }
 
     private void UpdateVectorObs()
     {
         VectorObservation vectorObservation = PlayerAgent.GetComponent<VectorObservation>();
         _obsList.Add(vectorObservation.GetObservation());
+        print($"Vector Observation: {vectorObservation.GetObservation().Length}");
         return;
     }
 }
