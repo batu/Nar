@@ -14,7 +14,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/_Scenes/2_OneBuilding/OneBuildingEnv.unity
     guid: 70a06beef4a9fd0439a7a8f4a86550b6
-  - enabled: 1
+  - enabled: 0
     path: Assets/_Scenes/6_UrbanEasy/UrbanEasyEnv.unity
     guid: 39533a31801b66c4c865931e3d5353c1
   m_configObjects: {}

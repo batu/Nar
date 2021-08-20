@@ -25,7 +25,7 @@ public class EnvironmentConfiguration : MonoBehaviour
 
     private void UpdateFailedEpisodeReplay()
     {
-        _failedEpisodeReplay.episodeThreshold = _envParameters.GetWithDefault("failed_episode_threshold", 0.5f);
+        _failedEpisodeReplay.episodeThreshold = _envParameters.GetWithDefault("failed_episode_threshold", 0.0f);
         _failedEpisodeReplay.failedEpisodeStart = _envParameters.GetWithDefault("failed_episode_start", 10000000);
     }
 
@@ -44,7 +44,7 @@ public class EnvironmentConfiguration : MonoBehaviour
 
     private void UpdateCurriculum()
     {
-        _episodeHandler.curriculumEndStep = _envParameters.GetWithDefault("curriculum_length", 15000000);
+        _episodeHandler.curriculumEndStep = _envParameters.GetWithDefault("curriculum_length", 10000000);
     }
 
 }

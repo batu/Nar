@@ -17,7 +17,7 @@ public class FailedEpisodeReplay : MonoBehaviour
     }
     
     private readonly List<EpisodeSpecification> _failedEpisodes = new List<EpisodeSpecification>();
-    public float episodeThreshold = 0.55f;
+    public float episodeThreshold = 0f;
     public float failedEpisodeStart = 0;
     public void AddFailedEpisode(EpisodeSpecification failedEpisode)
     {
