@@ -69,8 +69,7 @@ public class EpisodeHandler : MonoBehaviour
 
     public void RestartEpisode()
     {
-        _testing = false; 
-        
+        _testing = 0 < _envParameters.GetWithDefault("testing", 0);
         MoveAgentRandomly();
         
         bool curriculumActive = Academy.Instance.TotalStepCount * _numEnvsAdjustment < curriculumEndStep;
