@@ -44,7 +44,7 @@ public class EnvironmentConfiguration : MonoBehaviour
 
     private void UpdateCurriculum()
     {
-        _episodeHandler.curriculumEndStep = _envParameters.GetWithDefault("curriculum_length", 10000000);
+        _episodeHandler.curriculumEndStep = _envParameters.GetWithDefault("curriculum_length", 15000000);
     }
 
 }

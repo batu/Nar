@@ -11,7 +11,6 @@ public class EnvOccupancyGrid : ScriptableObject
 
     [HideInInspector]
     public Transform env;
-    public Dictionary<Vector3Int, bool> Occupancy;
     public float[] occupancyArray;
 
 
@@ -35,7 +34,6 @@ public class EnvOccupancyGrid : ScriptableObject
     {
 
         Debug.Log("Created new occupancy dict."); 
-        Occupancy = new Dictionary<Vector3Int, bool>();
         env = GameObject.FindWithTag("Env").transform;
         _episodeHandler = env.GetComponent<EpisodeHandler>();
         _envPosition = env.position;
@@ -106,7 +104,7 @@ public class EnvOccupancyGrid : ScriptableObject
 
     public void VisualizeOccupancy(Vector3 envPosition)
     { 
-        if (occupancyArray == null)  
+        if (occupancyArray.Length == 0)  
         {
             Debug.LogWarning("Can't visualize the occupancy because the occupancy dictionary is not created. " +
                              "Please play the scene and ensure CreateOccupancyDict is called to regenerate a " +
@@ -133,34 +131,13 @@ public class EnvOccupancyGrid : ScriptableObject
             }
         }
     }
-    public void VisualizeOccupancy2()
-    { 
-        if (Occupancy == null) 
-        {
-            Debug.LogWarning("Can't visualize the occupancy because the occupancy dictionary is not created. " +
-                             "Please play the scene and ensure CreateOccupancyDict is called to regenerate a " +
-                             "occupancy grid scriptable object. ");
-            return;
-        }
-        Vector3 extents = new Vector3(boxSize, boxSize, boxSize);
-        foreach (var keyvalue in Occupancy)
-        {        
-            Vector3 center = keyvalue.Key * boxSize;
-            bool overlap = keyvalue.Value;
-            if (overlap && Vector3.Distance(Camera.current.transform.position, center) < visualizeDistance && InfiniteCameraCanSeePoint(Camera.current, center))
-            {
-                Gizmos.color = Color.red;
-                Gizmos.DrawWireCube(center, extents);    
-            }
-        }
-    }
 
     
     public void VisualizePlayerOccupancy(Transform playerTransform, int xCount, int yCount, int zCount)
     {
         Vector3 playerPosition = playerTransform.localPosition;
         Vector3 envPosition = playerTransform.parent.position;
-        if (Occupancy == null)
+        if (occupancyArray.Length == 0)
         {
             Debug.LogWarning("Can't visualize the occupancy because the occupancy dictionary is not created. " +
                              "Please play the scene and ensure CreateOccupancyDict is called to regenerate a " +

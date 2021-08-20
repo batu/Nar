@@ -39,7 +39,7 @@ public class OccupancyGridObservation : MonoBehaviour, IObservation
     }
     void Start()
     {  
-        if (_occupancyGrid.Occupancy == null) 
+        if (_occupancyGrid.occupancyArray.Length == 0) 
         {
             if (transform.parent.GetComponent<EpisodeHandler>() == null)
             {
