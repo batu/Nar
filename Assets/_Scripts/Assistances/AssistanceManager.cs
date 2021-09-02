@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class AssistanceManager : MonoBehaviour, InputHandler
 {
-    private enum  AssistanceTypes {Execution, Planning, OnlyMove, OnlyJump}
+    private enum  AssistanceTypes {Execution, Planning, OnlyMove, OnlyJump, ClickToMove}
 
     [SerializeField]
     private AssistanceTypes activeAssistance = AssistanceTypes.Execution;
@@ -19,12 +19,18 @@ public class AssistanceManager : MonoBehaviour, InputHandler
     private Inferer _inferer;
 
     public TextMeshProUGUI text;
+    private NavigationAgent _navigationAgent;
+    private VectorObservation _vectorObservation;
+    private GameObject _goal;
 
     // Start is called before the first frame update
     void Start()
     {
         _playerInputHandler = GetComponent<PlayerInputHandler>();
         _assistance = GetComponent<IAssistance>();
+        _navigationAgent = GetComponent<NavigationAgent>();
+        _vectorObservation = GetComponent<VectorObservation>();
+        _goal = GameObject.FindWithTag("Goal");
     }
 
     // Update is called once per frame
@@ -55,6 +61,8 @@ public class AssistanceManager : MonoBehaviour, InputHandler
 
         if (!IsCorrectAssistance())
         {
+            // Goal might have been changed in ClickToMoveAssistance.
+            _vectorObservation.goal = _goal;
             switch (activeAssistance)
             {
                 case AssistanceTypes.Execution:
@@ -72,17 +80,28 @@ public class AssistanceManager : MonoBehaviour, InputHandler
                     _assistance = GetComponent<OnlyMoveAssistance>();
                     text.text = "Assistance Type: Only Move (The Agent handles moving, player only has to jump)";
                     text.color = Color.green;
-
                     break;
                 case AssistanceTypes.OnlyJump:
                     text.text = "Assistance Type: Only Jump (The Agent handles jumping, player only has to move)";
                     text.color = Color.green;
-
                     _assistance = GetComponent<OnlyJumpAssistance>();
+                    break;
+                case AssistanceTypes.ClickToMove:
+                    text.text = "Assistance Type: ClickToMove (The Agent goes to where the player points.)";
+                    text.color = Color.white;
+                    _assistance = GetComponent<ClickToMoveAssistance>();
                     break;
             }
         }
 
+    }
+    
+    void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (transform.position.y < -15)
+        {
+            _navigationAgent.EpisodeFailed();
+        }
     }
 
     private void ChangeAssistanceViaKeyboard()
@@ -91,6 +110,7 @@ public class AssistanceManager : MonoBehaviour, InputHandler
         if (Input.GetKeyDown(KeyCode.Alpha2)) activeAssistance = AssistanceTypes.Planning;
         if (Input.GetKeyDown(KeyCode.Alpha3)) activeAssistance = AssistanceTypes.OnlyJump;
         if (Input.GetKeyDown(KeyCode.Alpha4)) activeAssistance = AssistanceTypes.OnlyMove;
+        if (Input.GetKeyDown(KeyCode.Alpha5)) activeAssistance = AssistanceTypes.ClickToMove;
     }
 
     bool IsCorrectAssistance()
@@ -103,6 +123,8 @@ public class AssistanceManager : MonoBehaviour, InputHandler
         if (type == typeof(OnlyJumpAssistance) && activeAssistance == AssistanceTypes.OnlyJump)
             return true;
         if (type == typeof(OnlyMoveAssistance) && activeAssistance == AssistanceTypes.OnlyMove)
+            return true;
+        if (type == typeof(ClickToMoveAssistance) && activeAssistance == AssistanceTypes.ClickToMove)
             return true;
         return false;
     }

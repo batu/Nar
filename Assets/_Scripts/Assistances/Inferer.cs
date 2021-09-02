@@ -58,6 +58,7 @@ public class Inferer : MonoBehaviour, InputHandler
             {
                 List<float> obsList = new List<float>();
                 obsList.Add(_vectorObservation.GetObservation());
+                
         
                 if (_navigationAgent.useLocalRaycasts)
                 {

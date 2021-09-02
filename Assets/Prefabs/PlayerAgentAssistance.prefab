@@ -26,6 +26,7 @@ GameObject:
   - component: {fileID: 8279580831043927073}
   - component: {fileID: 6987999978656104175}
   - component: {fileID: 7491173930685811065}
+  - component: {fileID: 8106550389033665111}
   - component: {fileID: 1790569993169285146}
   m_Layer: 0
   m_Name: PlayerAgentAssistance
@@ -277,7 +278,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1790569993169285220}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b40555a5bc882af4da0978d86c7cd677, type: 3}
   m_Name: 
@@ -398,7 +399,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b58b7dc56b17634989b66826f3fce59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _occupancyGrid: {fileID: 11400000, guid: 90501d3b1249f5046bb813d95456ee18, type: 2}
+  _occupancyGrid: {fileID: 0}
   OccupancyObsCountXZ: 4
   OccupancyObsCountY: 2
   visualizeOccupancyGrid: 0
@@ -453,6 +454,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Ghost: {fileID: 0}
   Goal: {fileID: 0}
+--- !u!114 &8106550389033665111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790569993169285220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 302f6a8010ba6344e83e1ec58553951f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1790569993169285146
 MonoBehaviour:
   m_ObjectHideFlags: 0

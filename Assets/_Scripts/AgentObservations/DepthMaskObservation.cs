@@ -55,7 +55,7 @@ public class DepthMaskObservation : MonoBehaviour, IObservation
     {
         List<float> depthMaskResults = new List<float>();
         Vector3 direction = _playerCharacterController.characterVelocity.normalized;
-        direction = direction == Vector3.zero ? transform.forward : direction;
+        direction = direction == Vector3.zero ? Vector3.right : direction;
         aimPoint.rotation = Quaternion.LookRotation(direction);
         Debug.DrawRay(aimPoint.position, direction, Color.red);
         for (int x = -rayCount; x <= rayCount; x++)

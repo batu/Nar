@@ -32,7 +32,9 @@ public class PlanningAssistance : MonoBehaviour, InputHandler, IAssistance
 
     private void Update()
     {
-        if (Vector3.Distance(Goal.position, Ghost.transform.position) < 5f)
+        
+        _ghostController.enabled = _started;
+        if (Vector3.Distance(Goal.position, Ghost.transform.position) < 2.5f)
         {
             _started = false;
         };
@@ -54,7 +56,9 @@ public class PlanningAssistance : MonoBehaviour, InputHandler, IAssistance
 
     public void StartAssistance()
     {
+
         _ghostController.characterVelocity = Vector3.zero;
+        _ghostController.enabled = false;
         Ghost.transform.position = transform.position;
         _tr.Clear();
         _started = true;

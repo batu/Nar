@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Unity.MLAgents;
@@ -50,6 +51,7 @@ public class NavigationAgent :  Agent, InputHandler
 
     public delegate void EpisodeStarted();
     public EpisodeStarted StartEpisode;
+    [CanBeNull] private SuccessRateMeasure _successRateMeasure;
 
     private void Awake()
     {
@@ -71,6 +73,7 @@ public class NavigationAgent :  Agent, InputHandler
     void Start()
     {
         _existentialPunishment = -1f / ((float)MaxStep / _decisionRequester.DecisionPeriod);
+        _successRateMeasure = FindObjectOfType<SuccessRateMeasure>();
     }
     private void Update()
     {
@@ -81,11 +84,16 @@ public class NavigationAgent :  Agent, InputHandler
 
         if (!_agentDone && transform.position.y < -15)
         {
-            _agentDone = true;
-            _success = false;
+            EpisodeFailed();
         }
     }
-    
+
+    public void EpisodeFailed()
+    {
+        _agentDone = true;
+        _success = false;
+    }
+
 
     public override void OnEpisodeBegin()
     {
@@ -162,6 +170,7 @@ public class NavigationAgent :  Agent, InputHandler
             {
                 AddReward(-1f);
             }
+            _successRateMeasure?.UpdateResults(_success);
             EndEpisode();
         }
     }
@@ -190,6 +199,7 @@ public class NavigationAgent :  Agent, InputHandler
             StartEpisode();
             return;
         }
+        
         
         if (hit.transform.CompareTag("Goal"))
         {

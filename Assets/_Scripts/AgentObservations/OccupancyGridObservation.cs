@@ -51,7 +51,6 @@ public class OccupancyGridObservation : MonoBehaviour, IObservation
         }
     }
   
-    // Update is called once per frame
     public float[] GetObservation() 
     {
         return _occupancyGrid.GetPlayerArea(_agentTransform.localPosition, OccupancyObsCountXZ, OccupancyObsCountY, OccupancyObsCountXZ);

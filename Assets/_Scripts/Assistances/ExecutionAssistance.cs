@@ -6,12 +6,12 @@ using UnityEngine;
 public class ExecutionAssistance : MonoBehaviour, IAssistance
 {
     private Inferer _inferer;
-    bool _alwaysOn = false;
+    public bool alwaysOn = false;
 
     public bool AlwaysOn
     {
-        get => _alwaysOn;
-        set => _alwaysOn = value;
+        get => alwaysOn;
+        set => alwaysOn = value;
     }
     private void Start()
     {

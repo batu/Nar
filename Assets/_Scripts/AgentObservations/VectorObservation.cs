@@ -5,7 +5,8 @@ using UnityEngine;
 public class VectorObservation : MonoBehaviour, IObservation
 {
     // Start is called before the first frame update
-    private GameObject _goal;
+    [HideInInspector]
+    public GameObject goal;
 
     private NavigationAgent _navigationAgent;
     private PlayerCharacterController _playerCharacterController;
@@ -19,7 +20,7 @@ public class VectorObservation : MonoBehaviour, IObservation
         _playerCharacterController = GetComponent<PlayerCharacterController>();
 
         _useAbsolutePositions = _navigationAgent.useAbsolutePositions;
-        _goal = _navigationAgent.goal;
+        goal = _navigationAgent.goal;
         _maxDistance = _navigationAgent.maxDistance;
     }
     
@@ -30,7 +31,7 @@ public class VectorObservation : MonoBehaviour, IObservation
         List<float> vectorResults = new List<float>();
         
         var localPosition = transform.localPosition;
-        var goalPosition = _goal.transform.localPosition;
+        var goalPosition = goal.transform.localPosition;
         
         Vector3 dir = goalPosition - localPosition;
         vectorResults.Add(CanSeeGoal(dir.normalized)); //0
