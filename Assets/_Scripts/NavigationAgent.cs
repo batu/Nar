@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
@@ -18,8 +18,9 @@ public class NavigationAgent :  Agent, InputHandler
     [SerializeField] public bool useOccupancyGrid = true;
     [SerializeField] public bool useLocalRaycasts = true;
     
-    [Header("Actions")]
+    [Header("Movement")]
     public bool useRotation = false;
+    public float randomizationPercentage = 0f;
     
     private DepthMaskObservation _depthMaskObservation;
     private OccupancyGridObservation _occupancyGridObservation;
@@ -52,7 +53,13 @@ public class NavigationAgent :  Agent, InputHandler
     public delegate void EpisodeStarted();
     public EpisodeStarted StartEpisode;
     [CanBeNull] private SuccessRateMeasure _successRateMeasure;
+    [CanBeNull] private DecisionPeriodRandomizer _decisionPeriodRandomizer;
 
+    private float initMaxSpeedOnGround;
+    private float initMovementSharpnessOnGround;
+    private float initMaxSpeedInAir;
+    private float initAccelerationSpeedInAir;
+    private float initJumpForce;
     private void Awake()
     {
         if (useRotation)
@@ -68,12 +75,51 @@ public class NavigationAgent :  Agent, InputHandler
         _depthMaskObservation = GetComponent<DepthMaskObservation>();
         _whiskerObservation = GetComponent<WhiskerObservation>();
         _occupancyGridObservation = GetComponent<OccupancyGridObservation>();
+        
+        initMaxSpeedOnGround = _characterController.maxSpeedOnGround;
+        initMovementSharpnessOnGround = _characterController.movementSharpnessOnGround;
+        initMaxSpeedInAir = _characterController.maxSpeedInAir;
+        initAccelerationSpeedInAir = _characterController.accelerationSpeedInAir;
+        initJumpForce = _characterController.jumpForce;
     }
 
+    public void RandomizePlayerMovement()
+    {
+        float randomRange = initMaxSpeedOnGround * randomizationPercentage;
+        float randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
+        _characterController.maxSpeedOnGround = initMaxSpeedOnGround + randomAmount;
+        
+        randomRange = initMovementSharpnessOnGround * randomizationPercentage;
+        randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
+        _characterController.movementSharpnessOnGround = initMovementSharpnessOnGround + randomAmount;
+
+        randomRange = initMaxSpeedInAir * randomizationPercentage;
+        randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
+        _characterController.maxSpeedInAir = initMaxSpeedInAir + randomAmount;
+
+        randomRange = initAccelerationSpeedInAir * randomizationPercentage;
+        randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
+        _characterController.accelerationSpeedInAir = initAccelerationSpeedInAir + randomAmount;
+
+        randomRange = initJumpForce * randomizationPercentage;
+        randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
+        _characterController.jumpForce = initJumpForce + randomAmount;
+    }
+
+    public void ResetPlayerMovement()
+    {
+        _characterController.maxSpeedOnGround = initMaxSpeedOnGround;
+        _characterController.movementSharpnessOnGround = initMovementSharpnessOnGround;
+        _characterController.maxSpeedInAir = initMaxSpeedInAir;
+        _characterController.accelerationSpeedInAir = initAccelerationSpeedInAir;
+        _characterController.jumpForce = initJumpForce;
+    }
+    
     void Start()
     {
         _existentialPunishment = -1f / ((float)MaxStep / _decisionRequester.DecisionPeriod);
         _successRateMeasure = FindObjectOfType<SuccessRateMeasure>();
+        _decisionPeriodRandomizer = FindObjectOfType<DecisionPeriodRandomizer>();
     }
     private void Update()
     {
@@ -97,12 +143,15 @@ public class NavigationAgent :  Agent, InputHandler
 
     public override void OnEpisodeBegin()
     {
+        if (randomizationPercentage != 0)
+        {   
+            RandomizePlayerMovement();
+        }
         StartEpisode?.Invoke();
         _success = false;
         _agentDone = false;
         _lastDistance = Vector3.Distance(transform.position, goal.transform.position) / maxDistance;
         _lastShapeReward = 0;
-
     }
     
 
@@ -114,7 +163,6 @@ public class NavigationAgent :  Agent, InputHandler
         continuousActionsOut[2] = Input.GetButton("Jump") ? 1f : 0f;
     }
     
-    // Start is called before the first frame update
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         float xMovement = Mathf.Clamp(actionBuffers.ContinuousActions[0],-1f, 1f);
@@ -160,6 +208,8 @@ public class NavigationAgent :  Agent, InputHandler
   
     private void FixedUpdate()
     {
+        //UpdateDecisionFrequency();
+        
         if (_agentDone && Academy.Instance.StepCount % _decisionRequester.DecisionPeriod == 0)
         {
             if (_success)
@@ -172,6 +222,14 @@ public class NavigationAgent :  Agent, InputHandler
             }
             _successRateMeasure?.UpdateResults(_success);
             EndEpisode();
+        }
+    }
+
+    private void UpdateDecisionFrequency()
+    {
+        if (_decisionPeriodRandomizer?.randomizeDecisionPeriod ?? false)
+        {
+            _decisionRequester.DecisionPeriod = _decisionPeriodRandomizer.currentDecisionPeriod;
         }
     }
 
@@ -199,7 +257,6 @@ public class NavigationAgent :  Agent, InputHandler
             StartEpisode();
             return;
         }
-        
         
         if (hit.transform.CompareTag("Goal"))
         {

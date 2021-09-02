@@ -13,6 +13,7 @@ public class AgentConfiguration : MonoBehaviour
     public void Configure()
     {
         _envParameters = Academy.Instance.EnvironmentParameters;
+        UpdateActionRandomization();
         UpdateVectorObs();
         UpdateWhiskerObs();
         UpdateDepthMaskObs();
@@ -20,7 +21,13 @@ public class AgentConfiguration : MonoBehaviour
         UpdateDecisionFreq();
         UpdateBehaviorParam();
     }
-    
+
+    private void UpdateActionRandomization()
+    {
+        NavigationAgent navigationAgent = PlayerAgent.GetComponent<NavigationAgent>();
+        navigationAgent.randomizationPercentage = _envParameters.GetWithDefault("randomization_percentage", 0);
+    }
+
     private void UpdateBehaviorParam()
     {
         BehaviorParameters behaviorParameters = PlayerAgent.GetComponent<BehaviorParameters>();
@@ -32,7 +39,10 @@ public class AgentConfiguration : MonoBehaviour
     private void UpdateDecisionFreq()
     {
         DecisionRequester decisionRequester = PlayerAgent.GetComponent<DecisionRequester>();
+        DecisionPeriodRandomizer decisionPeriodRandomizer = GetComponent<DecisionPeriodRandomizer>();
         decisionRequester.DecisionPeriod = (int) _envParameters.GetWithDefault("decision_frequency", 10);
+        // if (decisionPeriodRandomizer)
+        //     decisionPeriodRandomizer.randomizeDecisionPeriod = 1 == (int) _envParameters.GetWithDefault("randomize_decision_freq", 0);
     }
 
     private void UpdateOccupancyGrid()

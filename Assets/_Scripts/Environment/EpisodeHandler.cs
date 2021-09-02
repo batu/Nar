@@ -41,16 +41,17 @@ public class EpisodeHandler : MonoBehaviour
     private EnvironmentParameters _envParameters;
     float _numEnvsAdjustment;
 
+    private NavigationAgent _agentScript;
     // Start is called before the first frame update
     private void Awake()
     {
-        NavigationAgent agentScript = Agent.GetComponent<NavigationAgent>();
-        agentScript.StartEpisode += RestartEpisode;
+        _agentScript = Agent.GetComponent<NavigationAgent>();
+        _agentScript.StartEpisode += RestartEpisode;
         
         xLen = Ground.GetComponent<BoxCollider>().bounds.size.x;
         zLen = Ground.GetComponent<BoxCollider>().bounds.size.z;
         maxDistance = Mathf.Sqrt(xLen * xLen + zLen * zLen);
-        agentScript.maxDistance = maxDistance;
+        _agentScript.maxDistance = maxDistance;
         _maxCurriculumDistance = maxDistance;
         
         _agentInitialPosition = Agent.position;
@@ -71,6 +72,11 @@ public class EpisodeHandler : MonoBehaviour
     {
         _testing = 0 < _envParameters.GetWithDefault("testing", 0);
         MoveAgentRandomly();
+
+        if (_testing)
+        {
+            _agentScript.ResetPlayerMovement();
+        }
         
         bool curriculumActive = Academy.Instance.TotalStepCount * _numEnvsAdjustment < curriculumEndStep;
         if (!curriculumActive || _testing)
