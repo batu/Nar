@@ -5,22 +5,25 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
+    path: Assets/_Scenes/0_Debug/DebugEnv.unity
+    guid: d21184317031f1e479ba2dc501349264
+  - enabled: 0
     path: Assets/_Scenes/1_Jump/JumpEnv.unity
     guid: 8d69e5aab367ee04da8fc0716459598d
   - enabled: 0
     path: Assets/_Scenes/6_UrbanEasy/EasyUrbanEnv.unity
     guid: a8afa38bf68a60240b42eb4a23d0853d
   - enabled: 0
-    path: Assets/_Scenes/0_Debug/DebugEnv.unity
-    guid: d21184317031f1e479ba2dc501349264
-  - enabled: 0
-    path: Assets/_Scenes/6_UrbanEasy/EasyUrbanAssistance.unity
-    guid: a94219e84102cbf4399e2929f8a2c916
-  - enabled: 0
+    path: Assets/_Scenes/7_City/CityEnv.unity
+    guid: 907f850dcf38ebd4c80c2e115334d38b
+  - enabled: 1
     path: Assets/_Scenes/Experimental/UrbanEasy_UserStudy.unity
     guid: 79fdb4fce8d7ef447a77a0fd1f4c87f1
   - enabled: 0
+    path: Assets/_Scenes/Experimental/UrbanEasy_OnTraceExperiments.unity
+    guid: 9162d9f1057c67a468f95d1d081782c5
+  - enabled: 0
     path: Assets/_Scenes/Experimental/UrbanEasy_Experiments.unity
-    guid: 4650963ea4622054d8dceb9b9dd788d1
+    guid: 0655ac1ea1388e64db4a699ba56850e6
   m_configObjects: {}

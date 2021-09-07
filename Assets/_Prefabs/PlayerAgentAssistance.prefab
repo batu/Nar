@@ -293,6 +293,7 @@ MonoBehaviour:
   useOccupancyGrid: 1
   useLocalRaycasts: 1
   useRotation: 0
+  randomizationPercentage: 0
   maxDistance: 141
   useDense: 1
   usePBRS: 1
@@ -352,6 +353,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 681cbae0995af9343ac455de44d22ca2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  goal: {fileID: 0}
 --- !u!114 &7102035202609746575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -416,6 +418,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0a4e8297b430954f8446fd8bea5c587, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  alwaysOn: 0
 --- !u!114 &8279580831043927073
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -466,6 +469,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 302f6a8010ba6344e83e1ec58553951f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  clickToMoveGoal: {fileID: 0}
+  originalGoal: {fileID: 0}
 --- !u!114 &1790569993169285146
 MonoBehaviour:
   m_ObjectHideFlags: 0

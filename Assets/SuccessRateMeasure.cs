@@ -11,20 +11,34 @@ public class SuccessRateMeasure : MonoBehaviour
     public float successRate = 0f;
     // Start is called before the first frame update
 
+    public int fellCount = 0;
+    public int timeoutCount = 0;
+    
     public TextMeshProUGUI text;
-    public void UpdateResults(bool success)
+
+    public enum EpisodeResult
     {
-        if (success)
+        Success, Failed, Timedout
+    }
+    public void UpdateResults(EpisodeResult episodeResult)
+    {
+        switch (episodeResult)
         {
-            successCount++;
-        }
-        else
-        {
-            failureCount++;
+            case EpisodeResult.Success:
+                successCount++;
+                break;
+            case EpisodeResult.Failed:
+                fellCount++;
+                failureCount++;
+                break;
+            case EpisodeResult.Timedout:
+                timeoutCount++;
+                failureCount++;
+                break;
         }
 
         successRate = successCount / (float) (failureCount + successCount);
-        text.text = successRate.ToString(CultureInfo.InvariantCulture) + " | " + (failureCount + successCount);
+        text.text = successRate.ToString(CultureInfo.InvariantCulture) + " | " + (failureCount + successCount) + $" | Fell:{fellCount} - Timeout:{timeoutCount}";
     }
 
     // Update is called once per frame

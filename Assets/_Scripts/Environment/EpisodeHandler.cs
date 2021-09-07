@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Unity.Mathematics;
 using Unity.MLAgents;
 using UnityEngine;
@@ -14,7 +16,6 @@ public class EpisodeHandler : MonoBehaviour
     public Transform Agent;
     public Transform Goal;
     public Transform Ground;
-
 
     private float maxDistance { get; set; } = 1f;
 
@@ -63,11 +64,6 @@ public class EpisodeHandler : MonoBehaviour
 
     }
 
-    private void Start()
-    {
-    }
-    
-
     public void RestartEpisode()
     {
         _testing = 0 < _envParameters.GetWithDefault("testing", 0);
@@ -87,12 +83,41 @@ public class EpisodeHandler : MonoBehaviour
         {
             MoveGoalClose();
         }
-        
+
+        // MoveGoalToPreSetPlaces();
         // MoveAgenttoInitialPlace();
         // MoveGoaltoInitialPlace();
+        //MoveGoalAgentToPresetPosition();
         _trailRenderer.Clear();
     }
 
+    
+    
+    [HideInInspector]
+    public int goalPositionIdx = 0;
+    [HideInInspector]
+    public Vector3[] goalPositions =
+    {
+        new Vector3(-25.24f, 38.68f, 28.8f),
+        new Vector3( 37.29f, 30.44f, 3.9f),
+        new Vector3( 33.24f, 21.44f,-43.43f),
+        new Vector3(-20.16f, 17.67f,-3.8f),
+        new Vector3( 35.7f,  13.65f, 40.15f),
+    };
+    void MoveGoalToPreSetPlaces()
+    {
+        
+        if (goalPositionIdx < goalPositions.Length)
+        {
+            Goal.position = goalPositions[goalPositionIdx];
+        }
+        else
+        {
+            MoveGoalRandomly();   
+        }
+        goalPositionIdx++;
+    }
+    
     // ReSharper disable Unity.PerformanceAnalysis
     void MoveGoalClose()
     {
@@ -213,5 +238,21 @@ public class EpisodeHandler : MonoBehaviour
         bool isZInBound = -zLen / 2 + safetyOffset <= point.z && point.z < zLen / 2 - safetyOffset;
         return isXInBound && isYInBound && isZInBound;
     }
-   
+
+
+    private EpisodeDataset _episodeDataset;
+    void MoveGoalAgentToPresetPosition()
+    {
+        if (_episodeDataset == null)
+        {
+            _episodeDataset = FindObjectOfType<EpisodeDataset>();
+        }
+
+        DatasetCreator.AgentGoalPositions agp = _episodeDataset.GetEpisodePair();
+        
+        Goal.localPosition = agp.goalPosition;
+        Agent.localPosition = agp.agentPosition;
+    }
+
+    
 }

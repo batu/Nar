@@ -55,11 +55,13 @@ public class NavigationAgent :  Agent, InputHandler
     [CanBeNull] private SuccessRateMeasure _successRateMeasure;
     [CanBeNull] private DecisionPeriodRandomizer _decisionPeriodRandomizer;
 
-    private float initMaxSpeedOnGround;
-    private float initMovementSharpnessOnGround;
-    private float initMaxSpeedInAir;
-    private float initAccelerationSpeedInAir;
-    private float initJumpForce;
+    private float _initMaxSpeedOnGround;
+    private float _initMovementSharpnessOnGround;
+    private float _initMaxSpeedInAir;
+    private float _initAccelerationSpeedInAir;
+    private float _initJumpForce;
+
+    private bool isGhost = false;
     private void Awake()
     {
         if (useRotation)
@@ -76,43 +78,45 @@ public class NavigationAgent :  Agent, InputHandler
         _whiskerObservation = GetComponent<WhiskerObservation>();
         _occupancyGridObservation = GetComponent<OccupancyGridObservation>();
         
-        initMaxSpeedOnGround = _characterController.maxSpeedOnGround;
-        initMovementSharpnessOnGround = _characterController.movementSharpnessOnGround;
-        initMaxSpeedInAir = _characterController.maxSpeedInAir;
-        initAccelerationSpeedInAir = _characterController.accelerationSpeedInAir;
-        initJumpForce = _characterController.jumpForce;
+        _initMaxSpeedOnGround = _characterController.maxSpeedOnGround;
+        _initMovementSharpnessOnGround = _characterController.movementSharpnessOnGround;
+        _initMaxSpeedInAir = _characterController.maxSpeedInAir;
+        _initAccelerationSpeedInAir = _characterController.accelerationSpeedInAir;
+        _initJumpForce = _characterController.jumpForce;
+
+        isGhost = transform.name == "Ghost";
     }
 
     public void RandomizePlayerMovement()
     {
-        float randomRange = initMaxSpeedOnGround * randomizationPercentage;
+        float randomRange = _initMaxSpeedOnGround * randomizationPercentage;
         float randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
-        _characterController.maxSpeedOnGround = initMaxSpeedOnGround + randomAmount;
+        _characterController.maxSpeedOnGround = _initMaxSpeedOnGround + randomAmount;
         
-        randomRange = initMovementSharpnessOnGround * randomizationPercentage;
+        randomRange = _initMovementSharpnessOnGround * randomizationPercentage;
         randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
-        _characterController.movementSharpnessOnGround = initMovementSharpnessOnGround + randomAmount;
+        _characterController.movementSharpnessOnGround = _initMovementSharpnessOnGround + randomAmount;
 
-        randomRange = initMaxSpeedInAir * randomizationPercentage;
+        randomRange = _initMaxSpeedInAir * randomizationPercentage;
         randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
-        _characterController.maxSpeedInAir = initMaxSpeedInAir + randomAmount;
+        _characterController.maxSpeedInAir = _initMaxSpeedInAir + randomAmount;
 
-        randomRange = initAccelerationSpeedInAir * randomizationPercentage;
+        randomRange = _initAccelerationSpeedInAir * randomizationPercentage;
         randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
-        _characterController.accelerationSpeedInAir = initAccelerationSpeedInAir + randomAmount;
+        _characterController.accelerationSpeedInAir = _initAccelerationSpeedInAir + randomAmount;
 
-        randomRange = initJumpForce * randomizationPercentage;
+        randomRange = _initJumpForce * randomizationPercentage;
         randomAmount = UnityEngine.Random.Range(-randomRange,  randomRange);
-        _characterController.jumpForce = initJumpForce + randomAmount;
+        _characterController.jumpForce = _initJumpForce + randomAmount;
     }
 
     public void ResetPlayerMovement()
     {
-        _characterController.maxSpeedOnGround = initMaxSpeedOnGround;
-        _characterController.movementSharpnessOnGround = initMovementSharpnessOnGround;
-        _characterController.maxSpeedInAir = initMaxSpeedInAir;
-        _characterController.accelerationSpeedInAir = initAccelerationSpeedInAir;
-        _characterController.jumpForce = initJumpForce;
+        _characterController.maxSpeedOnGround = _initMaxSpeedOnGround;
+        _characterController.movementSharpnessOnGround = _initMovementSharpnessOnGround;
+        _characterController.maxSpeedInAir = _initMaxSpeedInAir;
+        _characterController.accelerationSpeedInAir = _initAccelerationSpeedInAir;
+        _characterController.jumpForce = _initJumpForce;
     }
     
     void Start()
@@ -208,21 +212,28 @@ public class NavigationAgent :  Agent, InputHandler
   
     private void FixedUpdate()
     {
-        //UpdateDecisionFrequency();
+        UpdateDecisionFrequency();
         
-        if (_agentDone && Academy.Instance.StepCount % _decisionRequester.DecisionPeriod == 0)
+        if (_agentDone && (Academy.Instance.StepCount) % _decisionRequester.DecisionPeriod == 0)
         {
             if (_success)
             {
                 AddReward(1f);
+                _successRateMeasure?.UpdateResults(SuccessRateMeasure.EpisodeResult.Success);
             }
             else
             {
                 AddReward(-1f);
+                _successRateMeasure?.UpdateResults(SuccessRateMeasure.EpisodeResult.Failed);
             }
-            _successRateMeasure?.UpdateResults(_success);
             EndEpisode();
         }
+
+        if (!isGhost && StepCount == MaxStep - 1)
+        {
+            _successRateMeasure?.UpdateResults(SuccessRateMeasure.EpisodeResult.Timedout);
+        }
+        
     }
 
     private void UpdateDecisionFrequency()
@@ -291,7 +302,7 @@ public class NavigationAgent :  Agent, InputHandler
 
     public bool GetSprintInputHeld()
     {
-        return true; // Shift
+        return false; // Shift
     }
 
     public bool GetCrouchInputDown()

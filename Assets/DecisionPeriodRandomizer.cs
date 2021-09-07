@@ -27,7 +27,7 @@ public class DecisionPeriodRandomizer : MonoBehaviour
         {
             if (Academy.Instance.StepCount % currentDecisionPeriod == 0)
             {
-                currentDecisionPeriod += Random.Range(decisionPeriodLowerBound, decisionPeriod);
+                currentDecisionPeriod += Random.Range(decisionPeriodLowerBound, decisionPeriod + 1);
             }
             yield return _waitForFixedUpdate;
         }

@@ -39,7 +39,7 @@ public class Inferer : MonoBehaviour, InputHandler
         _inputShape = 505; //463;
         print($"Input shape for the model: {_runtimeModel.outputs[0]}");
         // _worker = WorkerFactory.CreateWorker(WorkerFactory.Type.CSharpRef, _runtimeModel);
-        _worker = WorkerFactory.CreateWorker(WorkerFactory.Type.Compute, _runtimeModel);
+        _worker = WorkerFactory.CreateWorker(WorkerFactory.Type.CSharpBurst, _runtimeModel);
         
         StartCoroutine(AskForDecision());
 
