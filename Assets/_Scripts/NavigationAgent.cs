@@ -42,9 +42,9 @@ public class NavigationAgent :  Agent, InputHandler
 
     // Reward
     [Header("Rewards")] [SerializeField]
-    bool useDense = true;
+    public bool useDense = true;
     [SerializeField]
-    bool usePBRS = true;
+    public bool usePBRS = true;
     
     private float _existentialPunishment = -1f / 100f;
     private float _lastDistance;

@@ -13,7 +13,6 @@ public interface InputHandler
 
     bool GetSprintInputHeld();
 
-    // bool GetDashInputDown();
     
     bool GetCrouchInputDown();
 

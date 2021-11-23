@@ -19,6 +19,9 @@ public class EpisodeHandler : MonoBehaviour
 
     private float maxDistance { get; set; } = 1f;
 
+    public bool moveAgentToInit = false;
+    public bool moveGoalToInit = false;
+
     [HideInInspector]
     public float xLen;
     [HideInInspector]
@@ -48,6 +51,8 @@ public class EpisodeHandler : MonoBehaviour
     {
         _agentScript = Agent.GetComponent<NavigationAgent>();
         _agentScript.StartEpisode += RestartEpisode;
+        
+        _episodeDataset = FindObjectOfType<EpisodeDataset>();
         
         xLen = Ground.GetComponent<BoxCollider>().bounds.size.x;
         zLen = Ground.GetComponent<BoxCollider>().bounds.size.z;
@@ -85,9 +90,16 @@ public class EpisodeHandler : MonoBehaviour
         }
 
         // MoveGoalToPreSetPlaces();
-        // MoveAgenttoInitialPlace();
-        // MoveGoaltoInitialPlace();
-        //MoveGoalAgentToPresetPosition();
+        
+        if(moveAgentToInit)
+            MoveAgenttoInitialPlace();
+    
+        if(moveGoalToInit)
+            MoveGoaltoInitialPlace();
+    
+        if (_episodeDataset)
+            MoveGoalAgentToPresetPosition();
+        
         _trailRenderer.Clear();
     }
 
@@ -245,7 +257,6 @@ public class EpisodeHandler : MonoBehaviour
     {
         if (_episodeDataset == null)
         {
-            _episodeDataset = FindObjectOfType<EpisodeDataset>();
         }
 
         DatasetCreator.AgentGoalPositions agp = _episodeDataset.GetEpisodePair();

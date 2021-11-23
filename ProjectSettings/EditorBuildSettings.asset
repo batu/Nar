@@ -17,7 +17,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/_Scenes/7_City/CityEnv.unity
     guid: 907f850dcf38ebd4c80c2e115334d38b
-  - enabled: 1
+  - enabled: 0
     path: Assets/_Scenes/Experimental/UrbanEasy_UserStudy.unity
     guid: 79fdb4fce8d7ef447a77a0fd1f4c87f1
   - enabled: 0
@@ -26,4 +26,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/_Scenes/Experimental/UrbanEasy_Experiments.unity
     guid: 0655ac1ea1388e64db4a699ba56850e6
+  - enabled: 1
+    path: Assets/_Scenes/0_Fractal/FractalEnv.unity
+    guid: 44aa734059df4944d82a8ddb38e10f60
   m_configObjects: {}
