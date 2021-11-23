@@ -1,1 +1,6 @@
 *.dll filter=lfs diff=lfs merge=lfs -text
+*.unity[[:space:]]*.tga[[:space:]]*.dds[[:space:]]*.onnx filter=lfs diff=lfs merge=lfs -text
+*.data[[:space:]]*.unity[[:space:]]*.tga[[:space:]]*.dds[[:space:]]*.onnx filter=lfs diff=lfs merge=lfs -text
+*.data filter=lfs diff=lfs merge=lfs -text
+*.unity filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text
